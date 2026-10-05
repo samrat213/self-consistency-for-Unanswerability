@@ -39,7 +39,7 @@
                 if (!isAuthenticated) return;
 
                 // Make sure to fetch the correct JSON file you are using
-                fetch('results_3.json')
+                fetch('results.json')
                     .then(res => {
                         if (!res.ok) throw new Error("Could not load JSON file.");
                         return res.json();

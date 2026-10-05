@@ -9,26 +9,46 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans p-6">
-    <div id="root"></div>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col">
+    <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
+        // --- CHANGE YOUR PASSWORD HERE ---
+        const SECRET_PASSWORD = "research2026"; 
+
         function App() {
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [passwordInput, setPasswordInput] = useState("");
+            const [loginError, setLoginError] = useState(false);
+
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(true);
             const [error, setError] = useState(null);
             const [selectedRow, setSelectedRow] = useState(null);
-
-            // Filters state
+            
+            // 4 Filters State
             const [filterModel, setFilterModel] = useState("All");
             const [filterDataset, setFilterDataset] = useState("All");
-
-            // Sort state
+            const [filterMode, setFilterMode] = useState("All");
+            const [filterMethod, setFilterMethod] = useState("All");
+            
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passwordInput === SECRET_PASSWORD) {
+                    setIsAuthenticated(true);
+                } else {
+                    setLoginError(true);
+                    setPasswordInput("");
+                }
+            };
+
             useEffect(() => {
+                if (!isAuthenticated) return;
+
                 fetch('results.json')
                     .then(res => {
                         if (!res.ok) throw new Error("Could not load results.json");
@@ -41,6 +61,7 @@
                                 for (const [mode, methods] of Object.entries(modes)) {
                                     const modeStr = mode === "_abstaintion" ? "Abstention" : "No Abstention";
                                     for (const [method, details] of Object.entries(methods)) {
+                                        if (Object.keys(details).length === 0) continue;
                                         parsedRows.push({
                                             id: `${model}-${dataset}-${modeStr}-${method}`,
                                             model: model.replace('result_', ''),
@@ -60,47 +81,67 @@
                         setError(err.message);
                         setLoading(false);
                     });
-            }, []);
+            }, [isAuthenticated]);
 
-            // Extract unique values for filters
+            if (!isAuthenticated) {
+                return (
+                    <div className="flex-1 flex items-center justify-center bg-gray-100">
+                        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm border border-gray-200">
+                            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Dashboard Access</h2>
+                            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                    <input 
+                                        type="password" 
+                                        value={passwordInput}
+                                        onChange={(e) => { setPasswordInput(e.target.value); setLoginError(false); }}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter password"
+                                        autoFocus
+                                    />
+                                </div>
+                                {loginError && <p className="text-red-500 text-sm">Incorrect password.</p>}
+                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
+                                    Login
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Extract unique values for all 4 dropdowns
             const uniqueModels = useMemo(() => [...new Set(data.map(d => d.model))], [data]);
             const uniqueDatasets = useMemo(() => [...new Set(data.map(d => d.dataset))], [data]);
+            const uniqueModes = useMemo(() => [...new Set(data.map(d => d.mode))], [data]);
+            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.method))], [data]);
 
-            // 1. Filter the Data
+            // Apply all 4 filters
             const filteredData = useMemo(() => {
                 return data.filter(row => {
                     return (filterModel === "All" || row.model === filterModel) &&
-                           (filterDataset === "All" || row.dataset === filterDataset);
+                           (filterDataset === "All" || row.dataset === filterDataset) &&
+                           (filterMode === "All" || row.mode === filterMode) &&
+                           (filterMethod === "All" || row.method === filterMethod);
                 });
-            }, [data, filterModel, filterDataset]);
+            }, [data, filterModel, filterDataset, filterMode, filterMethod]);
 
-            // 2. Sort the Filtered Data
+            // Sorting logic
             const sortedData = useMemo(() => {
                 let sortableItems = [...filteredData];
                 if (sortConfig.key !== null) {
                     sortableItems.sort((a, b) => {
                         let aVal, bVal;
-
-                        // Retrieve the correct values based on the column key
                         switch (sortConfig.key) {
                             case 'overall_accuracy':
-                                aVal = a.metrics?.overall_accuracy ?? -1;
-                                bVal = b.metrics?.overall_accuracy ?? -1;
-                                break;
-                            case 'ans_accuracy':
-                                aVal = a.metrics?.answerable?.accuracy ?? -1;
-                                bVal = b.metrics?.answerable?.accuracy ?? -1;
-                                break;
-                            case 'unans_accuracy':
-                                aVal = a.metrics?.unanswerable?.accuracy ?? -1;
-                                bVal = b.metrics?.unanswerable?.accuracy ?? -1;
-                                break;
+                                aVal = a.metrics?.overall_accuracy ?? -1; bVal = b.metrics?.overall_accuracy ?? -1; break;
+                            case 'ans_recall':
+                                aVal = a.metrics?.answerable?.sample_recall ?? -1; bVal = b.metrics?.answerable?.sample_recall ?? -1; break;
+                            case 'unans_recall':
+                                aVal = a.metrics?.unanswerable?.sample_recall ?? -1; bVal = b.metrics?.unanswerable?.sample_recall ?? -1; break;
                             default:
-                                // String columns (model, dataset, mode, method)
-                                aVal = a[sortConfig.key]?.toString().toLowerCase() || "";
-                                bVal = b[sortConfig.key]?.toString().toLowerCase() || "";
+                                aVal = a[sortConfig.key]?.toString().toLowerCase() || ""; bVal = b[sortConfig.key]?.toString().toLowerCase() || "";
                         }
-
                         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
                         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
                         return 0;
@@ -109,53 +150,56 @@
                 return sortableItems;
             }, [filteredData, sortConfig]);
 
-            // Sort Handler function
             const requestSort = (key) => {
                 let direction = 'asc';
-                if (sortConfig.key === key && sortConfig.direction === 'asc') {
-                    direction = 'desc';
-                }
+                if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
                 setSortConfig({ key, direction });
             };
 
-            // UI helper for sort arrows
-            const getSortIndicator = (key) => {
-                if (sortConfig.key === key) {
-                    return sortConfig.direction === 'asc' ? ' ▲' : ' ▼';
-                }
-                return ' ↕';
-            };
-
+            const getSortIndicator = (key) => sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ' ↕';
             const formatNum = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(4) : '-';
 
             if (loading) return <div className="text-center mt-20 font-bold">Loading Model Data...</div>;
             if (error) return <div className="text-center mt-20 text-red-600 font-bold">Error: {error}</div>;
 
             return (
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-3xl font-bold mb-2">Model Comparison Dashboard</h1>
-                    <p className="text-gray-500 mb-6">Compare performance metrics across different models and datasets. Click column headers to sort.</p>
-                    
-                    {/* Filter Controls */}
-                    <div className="flex gap-4 mb-6 p-4 bg-white rounded-lg shadow border border-gray-200">
+                <div className="max-w-7xl mx-auto p-6 flex-1 w-full">
+                    <div className="flex justify-between items-end mb-6">
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Filter by Model</label>
-                            <select 
-                                value={filterModel} 
-                                onChange={(e) => setFilterModel(e.target.value)}
-                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-48 p-2">
+                            <h1 className="text-3xl font-bold mb-2">Model Comparison Dashboard</h1>
+                            <p className="text-gray-500">Compare performance metrics across different models and datasets.</p>
+                        </div>
+                        <button onClick={() => setIsAuthenticated(false)} className="text-sm text-gray-500 hover:text-red-600 underline">Logout</button>
+                    </div>
+                    
+                    {/* Filter Controls - Now a 4-column Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow border border-gray-200">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Model</label>
+                            <select value={filterModel} onChange={(e) => setFilterModel(e.target.value)} className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2">
                                 <option value="All">All Models</option>
                                 {uniqueModels.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Filter by Dataset</label>
-                            <select 
-                                value={filterDataset} 
-                                onChange={(e) => setFilterDataset(e.target.value)}
-                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-48 p-2">
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Dataset</label>
+                            <select value={filterDataset} onChange={(e) => setFilterDataset(e.target.value)} className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2">
                                 <option value="All">All Datasets</option>
                                 {uniqueDatasets.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Mode</label>
+                            <select value={filterMode} onChange={(e) => setFilterMode(e.target.value)} className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2">
+                                <option value="All">All Modes</option>
+                                {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Method</label>
+                            <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2">
+                                <option value="All">All Methods</option>
+                                {uniqueMethods.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
                         </div>
                     </div>
@@ -179,11 +223,11 @@
                                     <th className="px-4 py-3 text-right bg-gray-900 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('overall_accuracy')}>
                                         Overall Acc <span className="text-gray-400 text-xs">{getSortIndicator('overall_accuracy')}</span>
                                     </th>
-                                    <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('ans_accuracy')}>
-                                        Ans accuracy <span className="text-gray-400 text-xs">{getSortIndicator('ans_accuracy')}</span>
+                                    <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('ans_recall')}>
+                                        Ans Recall <span className="text-gray-400 text-xs">{getSortIndicator('ans_recall')}</span>
                                     </th>
-                                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('unans_accuracy')}>
-                                        Unans accuracy <span className="text-gray-400 text-xs">{getSortIndicator('unans_accuracy')}</span>
+                                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('unans_recall')}>
+                                        Unans Recall <span className="text-gray-400 text-xs">{getSortIndicator('unans_recall')}</span>
                                     </th>
                                     <th className="px-4 py-3 text-center border-l border-gray-700">JSON Data</th>
                                 </tr>
@@ -200,29 +244,20 @@
                                         </td>
                                         <td className="px-4 py-3 text-gray-600">{row.method}</td>
                                         <td className="px-4 py-3 text-right font-bold text-gray-900 bg-gray-50">{formatNum(row.metrics?.overall_accuracy)}</td>
-                                        <td className="px-4 py-3 text-right border-l border-gray-200">{formatNum(row.metrics?.answerable?.accuracy)}</td>
-                                        <td className="px-4 py-3 text-right">{formatNum(row.metrics?.unanswerable?.accuracy)}</td>
+                                        <td className="px-4 py-3 text-right border-l border-gray-200">{formatNum(row.metrics?.answerable?.sample_recall)}</td>
+                                        <td className="px-4 py-3 text-right">{formatNum(row.metrics?.unanswerable?.sample_recall)}</td>
                                         <td className="px-4 py-3 text-center border-l border-gray-200">
-                                            <button 
-                                                onClick={() => setSelectedRow(row)}
-                                                className="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-xs font-medium transition shadow-sm">
+                                            <button onClick={() => setSelectedRow(row)} className="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-xs font-medium transition shadow-sm">
                                                 Inspect Values
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
-                                {sortedData.length === 0 && (
-                                    <tr>
-                                        <td colSpan="8" className="px-4 py-8 text-center text-gray-500 font-medium">
-                                            No data matches the selected filters.
-                                        </td>
-                                    </tr>
-                                )}
+                                {sortedData.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
                             </tbody>
                         </table>
                     </div>
 
-                    {/* Modal for detailed JSON view */}
                     {selectedRow && (
                         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50 backdrop-blur-sm">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
@@ -230,16 +265,10 @@
                                     <h2 className="text-xl font-bold text-gray-800">
                                         <span className="text-blue-600">{selectedRow.model}</span> / {selectedRow.dataset} / {selectedRow.method}
                                     </h2>
-                                    <button 
-                                        onClick={() => setSelectedRow(null)}
-                                        className="text-gray-400 hover:text-gray-900 text-3xl leading-none font-bold p-2">
-                                        &times;
-                                    </button>
+                                    <button onClick={() => setSelectedRow(null)} className="text-gray-400 hover:text-gray-900 text-3xl leading-none font-bold p-2">&times;</button>
                                 </div>
                                 <div className="p-0 overflow-y-auto flex-1 bg-gray-900">
-                                    <pre className="text-green-400 p-6 text-sm font-mono whitespace-pre-wrap">
-                                        {JSON.stringify(selectedRow, null, 2)}
-                                    </pre>
+                                    <pre className="text-green-400 p-6 text-sm font-mono whitespace-pre-wrap">{JSON.stringify(selectedRow, null, 2)}</pre>
                                 </div>
                             </div>
                         </div>

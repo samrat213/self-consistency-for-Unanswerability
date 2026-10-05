@@ -5,8 +5,9 @@
         "Greedy": {
           "ans_count": 282,
           "unans_count": 992,
-          "ans_correct_in_samples": 156,
+          "ans_correct_in_samples": 155,
           "unans_correct_in_samples": 551,
+          "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
               "Pred_ANSWERABLE_correct": 155,
@@ -21,9 +22,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 5,
-              "correct_present_count": 1,
-              "correct_was_most_freq_count": 1,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 445,
@@ -1178,7 +1179,7 @@
           "ans_count": 6002,
           "unans_count": 7857,
           "ans_correct_in_samples": 11,
-          "unans_correct_in_samples": 20,
+          "unans_correct_in_samples": 21,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -2381,7 +2382,7 @@
         "Greedy": {
           "ans_count": 1049,
           "unans_count": 929,
-          "ans_correct_in_samples": 149,
+          "ans_correct_in_samples": 148,
           "unans_correct_in_samples": 777,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
@@ -2398,9 +2399,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 693,
-              "correct_present_count": 1,
-              "correct_was_most_freq_count": 1,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 152,
@@ -5882,7 +5883,7 @@
           "ans_count": 6002,
           "unans_count": 7857,
           "ans_correct_in_samples": 0,
-          "unans_correct_in_samples": 7,
+          "unans_correct_in_samples": 0,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -9385,7 +9386,7 @@
           "ans_count": 282,
           "unans_count": 992,
           "ans_correct_in_samples": 163,
-          "unans_correct_in_samples": 1,
+          "unans_correct_in_samples": 561,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -9429,7 +9430,7 @@
             "unanswerable": {
               "precision": 0.99,
               "accuracy": 0.56,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.57,
               "f1": 0.72
             },
             "overall_accuracy": 0.57,
@@ -10551,7 +10552,7 @@
           "ans_count": 6002,
           "unans_count": 7866,
           "ans_correct_in_samples": 2693,
-          "unans_correct_in_samples": 1153,
+          "unans_correct_in_samples": 3996,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -10596,7 +10597,7 @@
             "unanswerable": {
               "precision": 0.65,
               "accuracy": 0.49,
-              "unans_correct_in_samples": 0.15,
+              "unans_correct_in_samples": 0.51,
               "f1": 0.56
             },
             "overall_accuracy": 0.47,
@@ -11791,8 +11792,8 @@
         "Greedy": {
           "ans_count": 2776,
           "unans_count": 224,
-          "ans_correct_in_samples": 1405,
-          "unans_correct_in_samples": 51,
+          "ans_correct_in_samples": 1256,
+          "unans_correct_in_samples": 146,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -11808,9 +11809,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 981,
-              "correct_present_count": 149,
-              "correct_was_most_freq_count": 149,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 42,
@@ -11831,13 +11832,13 @@
             "answerable": {
               "precision": 0.68,
               "accuracy": 0.45,
-              "ans_correct_in_samples": 0.51,
+              "ans_correct_in_samples": 0.45,
               "f1": 0.54
             },
             "unanswerable": {
               "precision": 0.16,
               "accuracy": 0.81,
-              "unans_correct_in_samples": 0.23,
+              "unans_correct_in_samples": 0.65,
               "f1": 0.26
             },
             "overall_accuracy": 0.48,
@@ -12308,7 +12309,7 @@
         "Greedy": {
           "ans_count": 7861,
           "unans_count": 0,
-          "ans_correct_in_samples": 4138,
+          "ans_correct_in_samples": 3547,
           "unans_correct_in_samples": 0,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
@@ -12325,9 +12326,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 2723,
-              "correct_present_count": 591,
-              "correct_was_most_freq_count": 591,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 0,
@@ -12347,7 +12348,7 @@
             "answerable": {
               "precision": 0.69,
               "accuracy": 0.45,
-              "ans_correct_in_samples": 0.53,
+              "ans_correct_in_samples": 0.45,
               "f1": 0.55
             },
             "unanswerable": {
@@ -12360,6 +12361,530 @@
             "overall_f1": 0.27,
             "balanced_accuracy": 0.23
           }
+        },
+        "self Consistency": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 315,
+              "Pred_ANSWERABLE_wrong": 265,
+              "Pred_Unanswerable": 7281
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7281,
+              "correct_present_count": 4846,
+              "correct_was_most_freq_count": 4838,
+              "avg_correct_freq_when_present": 11.87
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.54,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.07
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.04,
+            "balanced_accuracy": 0.02
+          }
+        },
+        "self Consistency + T": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 315,
+              "Pred_ANSWERABLE_wrong": 265,
+              "Pred_Unanswerable": 7281
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7281,
+              "correct_present_count": 4846,
+              "correct_was_most_freq_count": 4838,
+              "avg_correct_freq_when_present": 11.87
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.54,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.07
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.04,
+            "balanced_accuracy": 0.02
+          },
+          "learned_threshold": 0.05
+        },
+        "Majority": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 313,
+              "Pred_ANSWERABLE_wrong": 258,
+              "Pred_Unanswerable": 7290
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7290,
+              "correct_present_count": 4853,
+              "correct_was_most_freq_count": 4845,
+              "avg_correct_freq_when_present": 11.86
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.55,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.07
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.04,
+            "balanced_accuracy": 0.02
+          },
+          "learned_threshold": 0.5
+        },
+        "scUn": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 346,
+              "Pred_ANSWERABLE_wrong": 311,
+              "Pred_Unanswerable": 7204
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7204,
+              "correct_present_count": 4790,
+              "correct_was_most_freq_count": 4785,
+              "avg_correct_freq_when_present": 11.91
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.53,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.08
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.04,
+            "balanced_accuracy": 0.02
+          },
+          "learned_threshold": 0.05
+        },
+        "CRP_k": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 277,
+              "Pred_ANSWERABLE_wrong": 141,
+              "Pred_Unanswerable": 7443
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7443,
+              "correct_present_count": 4965,
+              "correct_was_most_freq_count": 4951,
+              "avg_correct_freq_when_present": 11.77
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.66,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.07
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.03,
+            "balanced_accuracy": 0.02
+          },
+          "learned_threshold": 2
+        },
+        "CRP_theta": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 277,
+              "Pred_ANSWERABLE_wrong": 141,
+              "Pred_Unanswerable": 7443
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7443,
+              "correct_present_count": 4965,
+              "correct_was_most_freq_count": 4951,
+              "avg_correct_freq_when_present": 11.77
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.66,
+              "accuracy": 0.04,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.07
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.04,
+            "overall_f1": 0.03,
+            "balanced_accuracy": 0.02
+          },
+          "learned_threshold": 0.4
+        },
+        "Adaptive_Consistency_beta": {
+          "ans_count": 7861,
+          "unans_count": 0,
+          "ans_correct_in_samples": 5326,
+          "unans_correct_in_samples": 0,
+          "matrix_gt_pred_counts": {
+            "ANSWERABLE": {
+              "Pred_ANSWERABLE_correct": 0,
+              "Pred_ANSWERABLE_wrong": 0,
+              "Pred_Unanswerable": 7861
+            },
+            "ABSTAIN": {
+              "Pred_ANSWERABLE": 0,
+              "Pred_Unanswerable": 0
+            }
+          },
+          "error_analysis": {
+            "FN_missed_answerable": {
+              "count": 7861,
+              "correct_present_count": 5326,
+              "correct_was_most_freq_count": 5308,
+              "avg_correct_freq_when_present": 12.0
+            },
+            "FP_hallucinated_unanswerable": {
+              "count": 0,
+              "correct_present_count": 0,
+              "avg_winning_freq": 0.0,
+              "avg_total_clusters": 0.0
+            },
+            "TN_successful_abstention": {
+              "count": 0,
+              "avg_total_clusters": 0.0
+            },
+            "global_max_freq_histogram": {
+              "0": 482,
+              "1": 6476,
+              "2": 5,
+              "3": 1,
+              "4": 3,
+              "5": 2,
+              "7": 5,
+              "8": 6,
+              "9": 14,
+              "10": 22,
+              "11": 22,
+              "12": 33,
+              "13": 26,
+              "14": 53,
+              "15": 57,
+              "16": 67,
+              "17": 70,
+              "18": 97,
+              "19": 120,
+              "20": 300
+            }
+          },
+          "metrics": {
+            "answerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "ans_correct_in_samples": 0.68,
+              "f1": 0.0
+            },
+            "unanswerable": {
+              "precision": 0.0,
+              "accuracy": 0.0,
+              "unans_correct_in_samples": 0.0,
+              "f1": 0.0
+            },
+            "overall_accuracy": 0.0,
+            "overall_f1": 0.0,
+            "balanced_accuracy": 0.0
+          },
+          "learned_threshold": 0.5
         }
       }
     },
@@ -12369,7 +12894,7 @@
           "ans_count": 1049,
           "unans_count": 929,
           "ans_correct_in_samples": 131,
-          "unans_correct_in_samples": 1,
+          "unans_correct_in_samples": 785,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -12413,7 +12938,7 @@
             "unanswerable": {
               "precision": 0.55,
               "accuracy": 0.84,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.84,
               "f1": 0.67
             },
             "overall_accuracy": 0.46,
@@ -14124,7 +14649,7 @@
           "ans_count": 607,
           "unans_count": 571,
           "ans_correct_in_samples": 481,
-          "unans_correct_in_samples": 0,
+          "unans_correct_in_samples": 472,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -14168,7 +14693,7 @@
             "unanswerable": {
               "precision": 0.93,
               "accuracy": 0.83,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.83,
               "f1": 0.88
             },
             "overall_accuracy": 0.81,
@@ -14761,7 +15286,7 @@
           "ans_count": 282,
           "unans_count": 992,
           "ans_correct_in_samples": 149,
-          "unans_correct_in_samples": 1,
+          "unans_correct_in_samples": 806,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -14805,7 +15330,7 @@
             "unanswerable": {
               "precision": 0.96,
               "accuracy": 0.81,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.81,
               "f1": 0.88
             },
             "overall_accuracy": 0.75,
@@ -14821,7 +15346,7 @@
           "ans_count": 6002,
           "unans_count": 7866,
           "ans_correct_in_samples": 2561,
-          "unans_correct_in_samples": 753,
+          "unans_correct_in_samples": 6028,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -14865,7 +15390,7 @@
             "unanswerable": {
               "precision": 0.71,
               "accuracy": 0.79,
-              "unans_correct_in_samples": 0.1,
+              "unans_correct_in_samples": 0.77,
               "f1": 0.75
             },
             "overall_accuracy": 0.63,
@@ -14942,7 +15467,7 @@
         "Greedy": {
           "ans_count": 7861,
           "unans_count": 0,
-          "ans_correct_in_samples": 1933,
+          "ans_correct_in_samples": 359,
           "unans_correct_in_samples": 0,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
@@ -14959,9 +15484,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 6305,
-              "correct_present_count": 1574,
-              "correct_was_most_freq_count": 1574,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 0,
@@ -14981,7 +15506,7 @@
             "answerable": {
               "precision": 0.23,
               "accuracy": 0.05,
-              "ans_correct_in_samples": 0.25,
+              "ans_correct_in_samples": 0.05,
               "f1": 0.08
             },
             "unanswerable": {
@@ -15118,8 +15643,8 @@
         "Greedy": {
           "ans_count": 1049,
           "unans_count": 929,
-          "ans_correct_in_samples": 145,
-          "unans_correct_in_samples": 0,
+          "ans_correct_in_samples": 143,
+          "unans_correct_in_samples": 876,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -15135,9 +15660,9 @@
           "error_analysis": {
             "FN_missed_answerable": {
               "count": 886,
-              "correct_present_count": 2,
-              "correct_was_most_freq_count": 2,
-              "avg_correct_freq_when_present": 1.0
+              "correct_present_count": 0,
+              "correct_was_most_freq_count": 0,
+              "avg_correct_freq_when_present": 0.0
             },
             "FP_hallucinated_unanswerable": {
               "count": 53,
@@ -15163,7 +15688,7 @@
             "unanswerable": {
               "precision": 0.5,
               "accuracy": 0.94,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.94,
               "f1": 0.65
             },
             "overall_accuracy": 0.52,
@@ -15179,7 +15704,7 @@
           "ans_count": 607,
           "unans_count": 571,
           "ans_correct_in_samples": 549,
-          "unans_correct_in_samples": 1,
+          "unans_correct_in_samples": 509,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -15223,7 +15748,7 @@
             "unanswerable": {
               "precision": 0.97,
               "accuracy": 0.89,
-              "unans_correct_in_samples": 0.0,
+              "unans_correct_in_samples": 0.89,
               "f1": 0.93
             },
             "overall_accuracy": 0.9,

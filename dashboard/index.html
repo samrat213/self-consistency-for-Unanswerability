@@ -78,8 +78,8 @@
                                             Unans_accuracy: unans.accuracy,
                                             ans_f1: ans.f1,
                                             unans_f1: unans.f1,
-                                            ans_correct_in_samples: ans.ans_correct_in_samples,
-                                            unans_correct_in_samples: unans.unans_correct_in_samples,
+                                            ans_correct_in_samples: details.ans_correct_in_samples ?? ans.ans_correct_in_samples,
+                                            unans_correct_in_samples: details.unans_correct_in_samples ?? unans.unans_correct_in_samples,
                                             FN_correct_present: fn_missed.correct_present_count,
                                             FP_correct_present: fp_hallucinated.correct_present_count,
                                             Threshold: details.learned_threshold,
@@ -233,12 +233,12 @@
                                             Dataset <span className="text-gray-400 text-[10px]">{getSortIndicator('Dataset')}</span>
                                         </th>
                                         <th className="px-4 py-3 border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('n_ans')}>
-                                            n_ans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_ans')}</span>
+                                            N Ans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_ans')}</span>
                                         </th>
                                         <th className="px-4 py-3 border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('n_unans')}>
-                                            n_unans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_unans')}</span>
+                                            N Unans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_unans')}</span>
                                         </th>
-                                        <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Awareness')}>
+                                        <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition border-l border-gray-700" onClick={() => requestSort('Awareness')}>
                                             Aware <span className="text-gray-400 text-[10px]">{getSortIndicator('Awareness')}</span>
                                         </th>
                                         <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Method')}>
@@ -282,27 +282,28 @@
                                         <tr key={row.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
                                             <td className="px-4 py-3 font-bold text-blue-900">{row.Model}</td>
                                             <td className="px-4 py-3 font-semibold border-l border-gray-200">{row.Dataset}</td>
-                                            <td className="px-4 py-3">
+                                            
+                                            {/* NEW CELLS ADDED HERE */}
+                                            <td className="px-4 py-3 border-l border-gray-200 text-indigo-700 font-mono">{formatInt(row.n_ans)}</td>
+                                            <td className="px-4 py-3 text-indigo-700 font-mono">{formatInt(row.n_unans)}</td>
+                                            
+                                            <td className="px-4 py-3 border-l border-gray-200">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold ${row.Awareness === 'Aware' ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-800'}`}>
                                                     {row.Awareness}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-gray-600">{row.Method}</td>
                                             
-                                            {/* Accuracies */}
                                             <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
                                             <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
                                             <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
                                             
-                                            {/* F1 Scores */}
                                             <td className="px-4 py-3 text-right border-l border-gray-200 text-purple-800 font-mono">{formatDecimal(row.ans_f1)}</td>
                                             <td className="px-4 py-3 text-right text-purple-800 font-mono">{formatDecimal(row.unans_f1)}</td>
                                             
-                                            {/* Sample Counts */}
                                             <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
                                             <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
                                             
-                                            {/* Error Counts */}
                                             <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>
                                             <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
                                             
@@ -315,7 +316,7 @@
                                             </td>
                                         </tr>
                                     ))}
-                                    {sortedData.length === 0 && <tr><td colSpan="15" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
+                                    {sortedData.length === 0 && <tr><td colSpan="17" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
                                 </tbody>
                             </table>
                         </div>

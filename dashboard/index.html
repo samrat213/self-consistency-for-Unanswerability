@@ -147,7 +147,7 @@
             const getSortIndicator = (key) => sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ' ↕';
             
             // Format numbers dynamically based on value type
-            const formatDecimal = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(4) : '-';
+            const formatDecimal = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(2) : '-';
             const formatInt = (num) => (num !== null && num !== undefined) ? Number(num).toString() : '-';
 
             if (!isAuthenticated) {

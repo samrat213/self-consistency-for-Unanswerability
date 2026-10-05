@@ -19,6 +19,7 @@
         const SECRET_PASSWORD = "research2026"; 
 
         function App() {
+            // 1. ALL React Hooks must be declared at the very top
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [passwordInput, setPasswordInput] = useState("");
             const [loginError, setLoginError] = useState(false);
@@ -28,7 +29,6 @@
             const [error, setError] = useState(null);
             const [selectedRow, setSelectedRow] = useState(null);
             
-            // 4 Filters State
             const [filterModel, setFilterModel] = useState("All");
             const [filterDataset, setFilterDataset] = useState("All");
             const [filterMode, setFilterMode] = useState("All");
@@ -36,17 +36,9 @@
             
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (passwordInput === SECRET_PASSWORD) {
-                    setIsAuthenticated(true);
-                } else {
-                    setLoginError(true);
-                    setPasswordInput("");
-                }
-            };
-
+            // 2. Handle Data Fetching
             useEffect(() => {
+                // Don't fetch the JSON file until the user is actually logged in
                 if (!isAuthenticated) return;
 
                 fetch('results.json')
@@ -83,6 +75,66 @@
                     });
             }, [isAuthenticated]);
 
+            // 3. Filter and Sorting Calculations
+            const uniqueModels = useMemo(() => [...new Set(data.map(d => d.model))], [data]);
+            const uniqueDatasets = useMemo(() => [...new Set(data.map(d => d.dataset))], [data]);
+            const uniqueModes = useMemo(() => [...new Set(data.map(d => d.mode))], [data]);
+            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.method))], [data]);
+
+            const filteredData = useMemo(() => {
+                return data.filter(row => {
+                    return (filterModel === "All" || row.model === filterModel) &&
+                           (filterDataset === "All" || row.dataset === filterDataset) &&
+                           (filterMode === "All" || row.mode === filterMode) &&
+                           (filterMethod === "All" || row.method === filterMethod);
+                });
+            }, [data, filterModel, filterDataset, filterMode, filterMethod]);
+
+            const sortedData = useMemo(() => {
+                let sortableItems = [...filteredData];
+                if (sortConfig.key !== null) {
+                    sortableItems.sort((a, b) => {
+                        let aVal, bVal;
+                        switch (sortConfig.key) {
+                            case 'overall_accuracy':
+                                aVal = a.metrics?.overall_accuracy ?? -1; bVal = b.metrics?.overall_accuracy ?? -1; break;
+                            case 'ans_recall':
+                                aVal = a.metrics?.answerable?.sample_recall ?? -1; bVal = b.metrics?.answerable?.sample_recall ?? -1; break;
+                            case 'unans_recall':
+                                aVal = a.metrics?.unanswerable?.sample_recall ?? -1; bVal = b.metrics?.unanswerable?.sample_recall ?? -1; break;
+                            default:
+                                aVal = a[sortConfig.key]?.toString().toLowerCase() || ""; bVal = b[sortConfig.key]?.toString().toLowerCase() || "";
+                        }
+                        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                }
+                return sortableItems;
+            }, [filteredData, sortConfig]);
+
+            // 4. Helper Functions
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passwordInput === SECRET_PASSWORD) {
+                    setIsAuthenticated(true);
+                } else {
+                    setLoginError(true);
+                    setPasswordInput("");
+                }
+            };
+
+            const requestSort = (key) => {
+                let direction = 'asc';
+                if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+                setSortConfig({ key, direction });
+            };
+
+            const getSortIndicator = (key) => sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ' ↕';
+            const formatNum = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(4) : '-';
+
+            // 5. RENDER LOGIC
+            // If the user isn't logged in, show the login screen
             if (!isAuthenticated) {
                 return (
                     <div className="flex-1 flex items-center justify-center bg-gray-100">
@@ -110,58 +162,13 @@
                 );
             }
 
-            // Extract unique values for all 4 dropdowns
-            const uniqueModels = useMemo(() => [...new Set(data.map(d => d.model))], [data]);
-            const uniqueDatasets = useMemo(() => [...new Set(data.map(d => d.dataset))], [data]);
-            const uniqueModes = useMemo(() => [...new Set(data.map(d => d.mode))], [data]);
-            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.method))], [data]);
+            // If the user is logged in but data is fetching
+            if (loading) return <div className="flex-1 flex items-center justify-center text-xl text-blue-600 font-bold">Loading Model Data...</div>;
+            
+            // If the fetch failed
+            if (error) return <div className="flex-1 flex items-center justify-center text-xl text-red-600 font-bold">Error: {error}</div>;
 
-            // Apply all 4 filters
-            const filteredData = useMemo(() => {
-                return data.filter(row => {
-                    return (filterModel === "All" || row.model === filterModel) &&
-                           (filterDataset === "All" || row.dataset === filterDataset) &&
-                           (filterMode === "All" || row.mode === filterMode) &&
-                           (filterMethod === "All" || row.method === filterMethod);
-                });
-            }, [data, filterModel, filterDataset, filterMode, filterMethod]);
-
-            // Sorting logic
-            const sortedData = useMemo(() => {
-                let sortableItems = [...filteredData];
-                if (sortConfig.key !== null) {
-                    sortableItems.sort((a, b) => {
-                        let aVal, bVal;
-                        switch (sortConfig.key) {
-                            case 'overall_accuracy':
-                                aVal = a.metrics?.overall_accuracy ?? -1; bVal = b.metrics?.overall_accuracy ?? -1; break;
-                            case 'ans_recall':
-                                aVal = a.metrics?.answerable?.sample_recall ?? -1; bVal = b.metrics?.answerable?.sample_recall ?? -1; break;
-                            case 'unans_recall':
-                                aVal = a.metrics?.unanswerable?.sample_recall ?? -1; bVal = b.metrics?.unanswerable?.sample_recall ?? -1; break;
-                            default:
-                                aVal = a[sortConfig.key]?.toString().toLowerCase() || ""; bVal = b[sortConfig.key]?.toString().toLowerCase() || "";
-                        }
-                        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-                        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-                        return 0;
-                    });
-                }
-                return sortableItems;
-            }, [filteredData, sortConfig]);
-
-            const requestSort = (key) => {
-                let direction = 'asc';
-                if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
-                setSortConfig({ key, direction });
-            };
-
-            const getSortIndicator = (key) => sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ' ↕';
-            const formatNum = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(4) : '-';
-
-            if (loading) return <div className="text-center mt-20 font-bold">Loading Model Data...</div>;
-            if (error) return <div className="text-center mt-20 text-red-600 font-bold">Error: {error}</div>;
-
+            // Otherwise, show the Dashboard
             return (
                 <div className="max-w-7xl mx-auto p-6 flex-1 w-full">
                     <div className="flex justify-between items-end mb-6">
@@ -172,7 +179,7 @@
                         <button onClick={() => setIsAuthenticated(false)} className="text-sm text-gray-500 hover:text-red-600 underline">Logout</button>
                     </div>
                     
-                    {/* Filter Controls - Now a 4-column Grid */}
+                    {/* Dropdown Filters */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow border border-gray-200">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Model</label>

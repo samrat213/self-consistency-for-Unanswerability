@@ -69,6 +69,8 @@
                                             id: `${model}-${dataset}-${mode_str}-${method}`,
                                             Model: model.replace('result_', ''),
                                             Dataset: dataset,
+                                            n_ans: details.ans_count,
+                                            n_unans: details.unans_count,
                                             Awareness: mode_str,
                                             Method: method.replace(/^_/, ''),
                                             Overall_Acc: metrics.overall_accuracy,
@@ -76,8 +78,8 @@
                                             Unans_accuracy: unans.accuracy,
                                             ans_f1: ans.f1,
                                             unans_f1: unans.f1,
-                                            ans_correct_in_samples: details.ans_correct_in_samples ?? ans.ans_correct_in_samples,
-                                            unans_correct_in_samples: details.unans_correct_in_samples ?? unans.unans_correct_in_samples,
+                                            ans_correct_in_samples: ans.ans_correct_in_samples,
+                                            unans_correct_in_samples: unans.unans_correct_in_samples,
                                             FN_correct_present: fn_missed.correct_present_count,
                                             FP_correct_present: fp_hallucinated.correct_present_count,
                                             Threshold: details.learned_threshold,
@@ -230,8 +232,14 @@
                                         <th className="px-4 py-3 border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Dataset')}>
                                             Dataset <span className="text-gray-400 text-[10px]">{getSortIndicator('Dataset')}</span>
                                         </th>
+                                        <th className="px-4 py-3 border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('n_ans')}>
+                                            n_ans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_ans')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('n_unans')}>
+                                            n_unans <span className="text-gray-400 text-[10px]">{getSortIndicator('n_unans')}</span>
+                                        </th>
                                         <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Awareness')}>
-                                            Awareness <span className="text-gray-400 text-[10px]">{getSortIndicator('Awareness')}</span>
+                                            Aware <span className="text-gray-400 text-[10px]">{getSortIndicator('Awareness')}</span>
                                         </th>
                                         <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Method')}>
                                             Method <span className="text-gray-400 text-[10px]">{getSortIndicator('Method')}</span>
@@ -252,16 +260,16 @@
                                             Unans F1 <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_f1')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-emerald-200" onClick={() => requestSort('ans_correct_in_samples')}>
-                                            Ans Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_correct_in_samples')}</span>
+                                            Ans Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_correct_in_samples')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-emerald-200" onClick={() => requestSort('unans_correct_in_samples')}>
-                                            Unans Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_correct_in_samples')}</span>
+                                            Unans Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_correct_in_samples')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-red-200" onClick={() => requestSort('FN_correct_present')}>
-                                            FN Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('FN_correct_present')}</span>
+                                            FN Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('FN_correct_present')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-red-200" onClick={() => requestSort('FP_correct_present')}>
-                                            FP Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('FP_correct_present')}</span>
+                                            FP Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('FP_correct_present')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Threshold')}>
                                             Threshold <span className="text-gray-400 text-[10px]">{getSortIndicator('Threshold')}</span>

@@ -7,7 +7,6 @@
           "unans_count": 992,
           "ans_correct_in_samples": 156,
           "unans_correct_in_samples": 551,
-          "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
               "Pred_ANSWERABLE_correct": 155,

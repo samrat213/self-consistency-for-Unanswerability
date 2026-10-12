@@ -1173,8 +1173,6 @@
         }
       }
     },
-<<<<<<< HEAD
-=======
     "brokenmath": {
       "_abstaintion": {
         "Greedy": {
@@ -2379,7 +2377,6 @@
       "_abstaintion": {},
       "": {}
     },
->>>>>>> 9b2a12e (updated website)
     "UA_commonsense": {
       "_abstaintion": {
         "Greedy": {
@@ -5880,8 +5877,6 @@
         }
       }
     },
-<<<<<<< HEAD
-=======
     "brokenmath": {
       "_abstaintion": {
         "Greedy": {
@@ -7058,7 +7053,6 @@
       "_abstaintion": {},
       "": {}
     },
->>>>>>> 9b2a12e (updated website)
     "UA_commonsense": {
       "_abstaintion": {
         "Greedy": {
@@ -9392,7 +9386,7 @@
           "ans_count": 282,
           "unans_count": 992,
           "ans_correct_in_samples": 163,
-          "unans_correct_in_samples": 561,
+          "unans_correct_in_samples": 1,
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
@@ -9436,7 +9430,7 @@
             "unanswerable": {
               "precision": 0.99,
               "accuracy": 0.56,
-              "unans_correct_in_samples": 0.57,
+              "unans_correct_in_samples": 0.0,
               "f1": 0.72
             },
             "overall_accuracy": 0.57,
@@ -15235,11 +15229,7 @@
       "": {}
     }
   },
-<<<<<<< HEAD
-  "result_gemini3.6": {
-=======
   "result_gemini36": {
->>>>>>> 9b2a12e (updated website)
     "ReliableMath": {
       "": {
         "Greedy": {
@@ -15358,8 +15348,6 @@
         }
       }
     },
-<<<<<<< HEAD
-=======
     "brokenmath": {
       "_abstaintion": {
         "Greedy": {
@@ -15600,7 +15588,6 @@
         }
       }
     },
->>>>>>> 9b2a12e (updated website)
     "UA_commonsense": {
       "": {
         "Greedy": {

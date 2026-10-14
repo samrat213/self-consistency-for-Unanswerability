@@ -9436,6 +9436,61 @@
             "overall_accuracy": 0.57,
             "overall_f1": 0.52,
             "balanced_accuracy": 0.57
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 0,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 9,
+                "Pred_Unanswerable": 1
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 52,
+                "Pred_Unanswerable": 58
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 1,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 52,
+                "correct_present_count": 52,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 58,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.26,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.37
+              },
+              "unanswerable": {
+                "precision": 0.98,
+                "accuracy": 0.53,
+                "unans_correct_in_samples": 0.0,
+                "f1": 0.69
+              },
+              "overall_accuracy": 0.56,
+              "overall_f1": 0.53,
+              "balanced_accuracy": 0.6
+            }
           }
         },
         "Majority": {
@@ -9510,7 +9565,74 @@
             "overall_f1": 0.56,
             "balanced_accuracy": 0.6
           },
-          "learned_threshold": 0.5
+          "learned_threshold": 0.5,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 20,
+                "Pred_ANSWERABLE_wrong": 9,
+                "Pred_Unanswerable": 2
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 40,
+                "Pred_Unanswerable": 70
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 2,
+                "correct_present_count": 1,
+                "correct_was_most_freq_count": 1,
+                "avg_correct_freq_when_present": 7.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 40,
+                "correct_present_count": 40,
+                "avg_winning_freq": 17.32,
+                "avg_total_clusters": 2.08
+              },
+              "TN_successful_abstention": {
+                "count": 70,
+                "avg_total_clusters": 2.1
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.29,
+                "accuracy": 0.65,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.4
+              },
+              "unanswerable": {
+                "precision": 0.97,
+                "accuracy": 0.64,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.77
+              },
+              "overall_accuracy": 0.64,
+              "overall_f1": 0.58,
+              "balanced_accuracy": 0.64
+            }
+          }
         },
         "self Consistency + T": {
           "ans_count": 282,
@@ -9584,7 +9706,74 @@
             "overall_f1": 0.61,
             "balanced_accuracy": 0.64
           },
-          "learned_threshold": 0.85
+          "learned_threshold": 0.85,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 18,
+                "Pred_ANSWERABLE_wrong": 7,
+                "Pred_Unanswerable": 6
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 24,
+                "Pred_Unanswerable": 86
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 6,
+                "correct_present_count": 3,
+                "correct_was_most_freq_count": 3,
+                "avg_correct_freq_when_present": 10.67
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 24,
+                "correct_present_count": 24,
+                "avg_winning_freq": 19.5,
+                "avg_total_clusters": 1.46
+              },
+              "TN_successful_abstention": {
+                "count": 86,
+                "avg_total_clusters": 2.27
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.37,
+                "accuracy": 0.58,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.45
+              },
+              "unanswerable": {
+                "precision": 0.93,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.85
+              },
+              "overall_accuracy": 0.74,
+              "overall_f1": 0.65,
+              "balanced_accuracy": 0.68
+            }
+          }
         },
         "self Consistency": {
           "ans_count": 282,
@@ -9657,6 +9846,73 @@
             "overall_accuracy": 0.35,
             "overall_f1": 0.35,
             "balanced_accuracy": 0.43
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 10,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 79,
+                "Pred_Unanswerable": 31
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 79,
+                "correct_present_count": 79,
+                "avg_winning_freq": 16.19,
+                "avg_total_clusters": 2.49
+              },
+              "TN_successful_abstention": {
+                "count": 31,
+                "avg_total_clusters": 1.06
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.19,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.3
+              },
+              "unanswerable": {
+                "precision": 1.0,
+                "accuracy": 0.28,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.44
+              },
+              "overall_accuracy": 0.37,
+              "overall_f1": 0.37,
+              "balanced_accuracy": 0.48
+            }
           }
         },
         "scUn": {
@@ -9731,7 +9987,74 @@
             "overall_f1": 0.61,
             "balanced_accuracy": 0.64
           },
-          "learned_threshold": 0.85
+          "learned_threshold": 0.85,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 18,
+                "Pred_ANSWERABLE_wrong": 7,
+                "Pred_Unanswerable": 6
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 24,
+                "Pred_Unanswerable": 86
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 6,
+                "correct_present_count": 3,
+                "correct_was_most_freq_count": 3,
+                "avg_correct_freq_when_present": 10.67
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 24,
+                "correct_present_count": 24,
+                "avg_winning_freq": 19.5,
+                "avg_total_clusters": 1.46
+              },
+              "TN_successful_abstention": {
+                "count": 86,
+                "avg_total_clusters": 2.27
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.37,
+                "accuracy": 0.58,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.45
+              },
+              "unanswerable": {
+                "precision": 0.93,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.85
+              },
+              "overall_accuracy": 0.74,
+              "overall_f1": 0.65,
+              "balanced_accuracy": 0.68
+            }
+          }
         },
         "CRP_k": {
           "ans_count": 282,
@@ -9805,7 +10128,74 @@
             "overall_f1": 0.59,
             "balanced_accuracy": 0.62
           },
-          "learned_threshold": 2
+          "learned_threshold": 2,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 17,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 8
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 27,
+                "Pred_Unanswerable": 83
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 8,
+                "correct_present_count": 4,
+                "correct_was_most_freq_count": 4,
+                "avg_correct_freq_when_present": 12.5
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 27,
+                "correct_present_count": 27,
+                "avg_winning_freq": 18.44,
+                "avg_total_clusters": 1.41
+              },
+              "TN_successful_abstention": {
+                "count": 83,
+                "avg_total_clusters": 2.31
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.34,
+                "accuracy": 0.55,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.42
+              },
+              "unanswerable": {
+                "precision": 0.91,
+                "accuracy": 0.75,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.71,
+              "overall_f1": 0.62,
+              "balanced_accuracy": 0.65
+            }
+          }
         },
         "CRP_theta": {
           "ans_count": 282,
@@ -9879,7 +10269,74 @@
             "overall_f1": 0.59,
             "balanced_accuracy": 0.62
           },
-          "learned_threshold": 0.4
+          "learned_threshold": 0.4,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 17,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 8
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 27,
+                "Pred_Unanswerable": 83
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 8,
+                "correct_present_count": 4,
+                "correct_was_most_freq_count": 4,
+                "avg_correct_freq_when_present": 12.5
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 27,
+                "correct_present_count": 27,
+                "avg_winning_freq": 18.44,
+                "avg_total_clusters": 1.41
+              },
+              "TN_successful_abstention": {
+                "count": 83,
+                "avg_total_clusters": 2.31
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.34,
+                "accuracy": 0.55,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.42
+              },
+              "unanswerable": {
+                "precision": 0.91,
+                "accuracy": 0.75,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.71,
+              "overall_f1": 0.62,
+              "balanced_accuracy": 0.65
+            }
+          }
         },
         "Adaptive_Consistency_beta": {
           "ans_count": 282,
@@ -9889,31 +10346,31 @@
           "correct_was_most_freq_count": 0,
           "matrix_gt_pred_counts": {
             "ANSWERABLE": {
-              "Pred_ANSWERABLE_correct": 0,
-              "Pred_ANSWERABLE_wrong": 0,
-              "Pred_Unanswerable": 282
+              "Pred_ANSWERABLE_correct": 154,
+              "Pred_ANSWERABLE_wrong": 117,
+              "Pred_Unanswerable": 11
             },
             "ABSTAIN": {
-              "Pred_ANSWERABLE": 0,
-              "Pred_Unanswerable": 992
+              "Pred_ANSWERABLE": 425,
+              "Pred_Unanswerable": 567
             }
           },
           "error_analysis": {
             "FN_missed_answerable": {
-              "count": 282,
-              "correct_present_count": 172,
-              "correct_was_most_freq_count": 162,
-              "avg_correct_freq_when_present": 18.23
+              "count": 11,
+              "correct_present_count": 4,
+              "correct_was_most_freq_count": 3,
+              "avg_correct_freq_when_present": 12.0
             },
             "FP_hallucinated_unanswerable": {
-              "count": 0,
-              "correct_present_count": 0,
-              "avg_winning_freq": 0.0,
-              "avg_total_clusters": 0.0
+              "count": 425,
+              "correct_present_count": 425,
+              "avg_winning_freq": 16.24,
+              "avg_total_clusters": 2.48
             },
             "TN_successful_abstention": {
-              "count": 992,
-              "avg_total_clusters": 2.13
+              "count": 567,
+              "avg_total_clusters": 1.86
             },
             "global_max_freq_histogram": {
               "2": 1,
@@ -9938,22 +10395,89 @@
           },
           "metrics": {
             "answerable": {
-              "precision": 0.0,
-              "accuracy": 0.0,
+              "precision": 0.22,
+              "accuracy": 0.55,
               "ans_correct_in_samples": 0.61,
-              "f1": 0.0
+              "f1": 0.31
             },
             "unanswerable": {
-              "precision": 0.78,
-              "accuracy": 1.0,
+              "precision": 0.98,
+              "accuracy": 0.57,
               "unans_correct_in_samples": 0.01,
-              "f1": 0.88
+              "f1": 0.72
             },
-            "overall_accuracy": 0.78,
-            "overall_f1": 0.44,
-            "balanced_accuracy": 0.5
+            "overall_accuracy": 0.57,
+            "overall_f1": 0.52,
+            "balanced_accuracy": 0.56
           },
-          "learned_threshold": 0.5
+          "learned_threshold": 0.0,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 3,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 8,
+                "Pred_Unanswerable": 2
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 46,
+                "Pred_Unanswerable": 64
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 2,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 46,
+                "correct_present_count": 46,
+                "avg_winning_freq": 16.43,
+                "avg_total_clusters": 2.39
+              },
+              "TN_successful_abstention": {
+                "count": 64,
+                "avg_total_clusters": 1.88
+              },
+              "global_max_freq_histogram": {
+                "7": 3,
+                "9": 4,
+                "10": 4,
+                "11": 2,
+                "12": 4,
+                "13": 5,
+                "14": 5,
+                "15": 6,
+                "16": 12,
+                "17": 2,
+                "18": 12,
+                "19": 20,
+                "20": 62
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.28,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.4
+              },
+              "unanswerable": {
+                "precision": 0.97,
+                "accuracy": 0.58,
+                "unans_correct_in_samples": 0.03,
+                "f1": 0.73
+              },
+              "overall_accuracy": 0.6,
+              "overall_f1": 0.56,
+              "balanced_accuracy": 0.63
+            }
+          }
         }
       },
       "": {
@@ -10011,6 +10535,61 @@
             "overall_accuracy": 0.12,
             "overall_f1": 0.1,
             "balanced_accuracy": 0.28
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 20,
+            "unans_correct_in_samples": 1,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 20,
+                "Pred_ANSWERABLE_wrong": 11,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 110,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 110,
+                "correct_present_count": 110,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.14,
+                "accuracy": 0.65,
+                "ans_correct_in_samples": 0.65,
+                "f1": 0.23
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.01,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.14,
+              "overall_f1": 0.12,
+              "balanced_accuracy": 0.32
+            }
           }
         },
         "Majority": {
@@ -10087,7 +10666,77 @@
             "overall_f1": 0.25,
             "balanced_accuracy": 0.37
           },
-          "learned_threshold": 0.5
+          "learned_threshold": 0.5,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 20,
+                "Pred_ANSWERABLE_wrong": 9,
+                "Pred_Unanswerable": 2
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 90,
+                "Pred_Unanswerable": 20
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 2,
+                "correct_present_count": 1,
+                "correct_was_most_freq_count": 1,
+                "avg_correct_freq_when_present": 7.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 90,
+                "correct_present_count": 90,
+                "avg_winning_freq": 16.54,
+                "avg_total_clusters": 2.53
+              },
+              "TN_successful_abstention": {
+                "count": 20,
+                "avg_total_clusters": 7.15
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.17,
+                "accuracy": 0.65,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.27
+              },
+              "unanswerable": {
+                "precision": 0.91,
+                "accuracy": 0.18,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.3
+              },
+              "overall_accuracy": 0.28,
+              "overall_f1": 0.28,
+              "balanced_accuracy": 0.41
+            }
+          }
         },
         "self Consistency + T": {
           "ans_count": 282,
@@ -10163,7 +10812,77 @@
             "overall_f1": 0.55,
             "balanced_accuracy": 0.57
           },
-          "learned_threshold": 1.0
+          "learned_threshold": 1.0,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 13,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 12
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 26,
+                "Pred_Unanswerable": 84
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 12,
+                "correct_present_count": 8,
+                "correct_was_most_freq_count": 8,
+                "avg_correct_freq_when_present": 14.25
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 26,
+                "correct_present_count": 26,
+                "avg_winning_freq": 19.77,
+                "avg_total_clusters": 1.12
+              },
+              "TN_successful_abstention": {
+                "count": 84,
+                "avg_total_clusters": 4.07
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.29,
+                "accuracy": 0.42,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.34
+              },
+              "unanswerable": {
+                "precision": 0.88,
+                "accuracy": 0.76,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.82
+              },
+              "overall_accuracy": 0.69,
+              "overall_f1": 0.58,
+              "balanced_accuracy": 0.59
+            }
+          }
         },
         "self Consistency": {
           "ans_count": 282,
@@ -10238,6 +10957,76 @@
             "overall_accuracy": 0.13,
             "overall_f1": 0.1,
             "balanced_accuracy": 0.29
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 10,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 110,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 110,
+                "correct_present_count": 110,
+                "avg_winning_freq": 15.05,
+                "avg_total_clusters": 3.37
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.15,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.24
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.15,
+              "overall_f1": 0.12,
+              "balanced_accuracy": 0.34
+            }
           }
         },
         "scUn": {
@@ -10314,7 +11103,77 @@
             "overall_f1": 0.55,
             "balanced_accuracy": 0.57
           },
-          "learned_threshold": 1.0
+          "learned_threshold": 1.0,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 13,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 12
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 24,
+                "Pred_Unanswerable": 86
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 12,
+                "correct_present_count": 8,
+                "correct_was_most_freq_count": 8,
+                "avg_correct_freq_when_present": 14.25
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 24,
+                "correct_present_count": 24,
+                "avg_winning_freq": 20.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 86,
+                "avg_total_clusters": 4.03
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.3,
+                "accuracy": 0.42,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.35
+              },
+              "unanswerable": {
+                "precision": 0.88,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.7,
+              "overall_f1": 0.59,
+              "balanced_accuracy": 0.6
+            }
+          }
         },
         "CRP_k": {
           "ans_count": 282,
@@ -10390,7 +11249,77 @@
             "overall_f1": 0.55,
             "balanced_accuracy": 0.57
           },
-          "learned_threshold": 1
+          "learned_threshold": 1,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 13,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 12
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 24,
+                "Pred_Unanswerable": 86
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 12,
+                "correct_present_count": 8,
+                "correct_was_most_freq_count": 8,
+                "avg_correct_freq_when_present": 14.25
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 24,
+                "correct_present_count": 24,
+                "avg_winning_freq": 20.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 86,
+                "avg_total_clusters": 4.03
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.3,
+                "accuracy": 0.42,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.35
+              },
+              "unanswerable": {
+                "precision": 0.88,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.7,
+              "overall_f1": 0.59,
+              "balanced_accuracy": 0.6
+            }
+          }
         },
         "CRP_theta": {
           "ans_count": 282,
@@ -10466,7 +11395,77 @@
             "overall_f1": 0.55,
             "balanced_accuracy": 0.57
           },
-          "learned_threshold": 0.0
+          "learned_threshold": 0.0,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 13,
+                "Pred_ANSWERABLE_wrong": 6,
+                "Pred_Unanswerable": 12
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 24,
+                "Pred_Unanswerable": 86
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 12,
+                "correct_present_count": 8,
+                "correct_was_most_freq_count": 8,
+                "avg_correct_freq_when_present": 14.25
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 24,
+                "correct_present_count": 24,
+                "avg_winning_freq": 20.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 86,
+                "avg_total_clusters": 4.03
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.3,
+                "accuracy": 0.42,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.35
+              },
+              "unanswerable": {
+                "precision": 0.88,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.7,
+              "overall_f1": 0.59,
+              "balanced_accuracy": 0.6
+            }
+          }
         },
         "Adaptive_Consistency_beta": {
           "ans_count": 282,
@@ -10542,7 +11541,77 @@
             "overall_f1": 0.44,
             "balanced_accuracy": 0.5
           },
-          "learned_threshold": 0.5
+          "learned_threshold": 0.05,
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 6,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 0,
+                "Pred_ANSWERABLE_wrong": 0,
+                "Pred_Unanswerable": 31
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 0,
+                "Pred_Unanswerable": 110
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 31,
+                "correct_present_count": 21,
+                "correct_was_most_freq_count": 21,
+                "avg_correct_freq_when_present": 17.81
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "avg_winning_freq": 0.0,
+                "avg_total_clusters": 0.0
+              },
+              "TN_successful_abstention": {
+                "count": 110,
+                "avg_total_clusters": 3.37
+              },
+              "global_max_freq_histogram": {
+                "5": 1,
+                "6": 2,
+                "7": 6,
+                "8": 5,
+                "9": 8,
+                "10": 3,
+                "11": 6,
+                "12": 7,
+                "13": 7,
+                "14": 5,
+                "15": 7,
+                "16": 4,
+                "17": 6,
+                "18": 17,
+                "19": 14,
+                "20": 43
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.0
+              },
+              "unanswerable": {
+                "precision": 0.78,
+                "accuracy": 1.0,
+                "unans_correct_in_samples": 0.05,
+                "f1": 0.88
+              },
+              "overall_accuracy": 0.78,
+              "overall_f1": 0.44,
+              "balanced_accuracy": 0.5
+            }
+          }
         }
       }
     },
@@ -14115,6 +15184,61 @@
             "overall_accuracy": 0.58,
             "overall_f1": 0.58,
             "balanced_accuracy": 0.62
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 238,
+            "unans_correct_in_samples": 327,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 238,
+                "Pred_ANSWERABLE_wrong": 80,
+                "Pred_Unanswerable": 21
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 341,
+                "Pred_Unanswerable": 327
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 21,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 341,
+                "correct_present_count": 341,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 327,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.36,
+                "accuracy": 0.7,
+                "ans_correct_in_samples": 0.7,
+                "f1": 0.48
+              },
+              "unanswerable": {
+                "precision": 0.94,
+                "accuracy": 0.49,
+                "unans_correct_in_samples": 0.49,
+                "f1": 0.64
+              },
+              "overall_accuracy": 0.56,
+              "overall_f1": 0.56,
+              "balanced_accuracy": 0.6
+            }
           }
         }
       },
@@ -14172,6 +15296,61 @@
             "overall_accuracy": 0.25,
             "overall_f1": 0.19,
             "balanced_accuracy": 0.38
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 240,
+            "unans_correct_in_samples": 0,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 240,
+                "Pred_ANSWERABLE_wrong": 99,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 668,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 668,
+                "correct_present_count": 668,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.24,
+                "accuracy": 0.71,
+                "ans_correct_in_samples": 0.71,
+                "f1": 0.36
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.0,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.24,
+              "overall_f1": 0.18,
+              "balanced_accuracy": 0.35
+            }
           }
         }
       }
@@ -14232,6 +15411,61 @@
             "overall_accuracy": 0.5,
             "overall_f1": 0.46,
             "balanced_accuracy": 0.51
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 120,
+            "unans_correct_in_samples": 220,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 109,
+                "Pred_ANSWERABLE_wrong": 72,
+                "Pred_Unanswerable": 40
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 795,
+                "Pred_Unanswerable": 680
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 40,
+                "correct_present_count": 11,
+                "correct_was_most_freq_count": 11,
+                "avg_correct_freq_when_present": 1.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 795,
+                "correct_present_count": 795,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 680,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.11,
+                "accuracy": 0.49,
+                "ans_correct_in_samples": 0.54,
+                "f1": 0.18
+              },
+              "unanswerable": {
+                "precision": 0.94,
+                "accuracy": 0.46,
+                "unans_correct_in_samples": 0.15,
+                "f1": 0.62
+              },
+              "overall_accuracy": 0.47,
+              "overall_f1": 0.4,
+              "balanced_accuracy": 0.48
+            }
           }
         }
       },
@@ -14290,6 +15524,61 @@
             "overall_accuracy": 0.11,
             "overall_f1": 0.1,
             "balanced_accuracy": 0.28
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 112,
+            "unans_correct_in_samples": 242,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 112,
+                "Pred_ANSWERABLE_wrong": 109,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 1475,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 1475,
+                "correct_present_count": 1475,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.07,
+                "accuracy": 0.51,
+                "ans_correct_in_samples": 0.51,
+                "f1": 0.12
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.16,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.07,
+              "overall_f1": 0.06,
+              "balanced_accuracy": 0.25
+            }
           }
         }
       }
@@ -14352,6 +15641,61 @@
             "overall_accuracy": 0.13,
             "overall_f1": 0.11,
             "balanced_accuracy": 0.3
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 1,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 10,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 110,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 110,
+                "correct_present_count": 110,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.15,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.24
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.01,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.15,
+              "overall_f1": 0.12,
+              "balanced_accuracy": 0.34
+            }
           }
         }
       },
@@ -14410,6 +15754,61 @@
             "overall_accuracy": 0.75,
             "overall_f1": 0.65,
             "balanced_accuracy": 0.67
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 18,
+            "unans_correct_in_samples": 82,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 18,
+                "Pred_ANSWERABLE_wrong": 10,
+                "Pred_Unanswerable": 3
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 28,
+                "Pred_Unanswerable": 82
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 3,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 28,
+                "correct_present_count": 28,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 82,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.32,
+                "accuracy": 0.58,
+                "ans_correct_in_samples": 0.58,
+                "f1": 0.41
+              },
+              "unanswerable": {
+                "precision": 0.96,
+                "accuracy": 0.75,
+                "unans_correct_in_samples": 0.75,
+                "f1": 0.84
+              },
+              "overall_accuracy": 0.71,
+              "overall_f1": 0.63,
+              "balanced_accuracy": 0.66
+            }
           }
         }
       }
@@ -14945,6 +16344,61 @@
             "overall_accuracy": 0.82,
             "overall_f1": 0.8,
             "balanced_accuracy": 0.81
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 244,
+            "unans_correct_in_samples": 570,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 244,
+                "Pred_ANSWERABLE_wrong": 58,
+                "Pred_Unanswerable": 37
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 98,
+                "Pred_Unanswerable": 570
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 37,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 98,
+                "correct_present_count": 98,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 570,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.61,
+                "accuracy": 0.72,
+                "ans_correct_in_samples": 0.72,
+                "f1": 0.66
+              },
+              "unanswerable": {
+                "precision": 0.94,
+                "accuracy": 0.85,
+                "unans_correct_in_samples": 0.85,
+                "f1": 0.89
+              },
+              "overall_accuracy": 0.81,
+              "overall_f1": 0.78,
+              "balanced_accuracy": 0.79
+            }
           }
         }
       },
@@ -15002,6 +16456,61 @@
             "overall_accuracy": 0.27,
             "overall_f1": 0.21,
             "balanced_accuracy": 0.41
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 268,
+            "unans_correct_in_samples": 2,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 268,
+                "Pred_ANSWERABLE_wrong": 71,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 668,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 668,
+                "correct_present_count": 668,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.27,
+                "accuracy": 0.79,
+                "ans_correct_in_samples": 0.79,
+                "f1": 0.4
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.0,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.27,
+              "overall_f1": 0.2,
+              "balanced_accuracy": 0.4
+            }
           }
         }
       }
@@ -15061,6 +16570,61 @@
             "overall_accuracy": 0.65,
             "overall_f1": 0.44,
             "balanced_accuracy": 0.44
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 52,
+            "unans_correct_in_samples": 140,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 17,
+                "Pred_ANSWERABLE_wrong": 60,
+                "Pred_Unanswerable": 144
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 319,
+                "Pred_Unanswerable": 1156
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 144,
+                "correct_present_count": 35,
+                "correct_was_most_freq_count": 35,
+                "avg_correct_freq_when_present": 1.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 319,
+                "correct_present_count": 319,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 1156,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.04,
+                "accuracy": 0.08,
+                "ans_correct_in_samples": 0.24,
+                "f1": 0.06
+              },
+              "unanswerable": {
+                "precision": 0.89,
+                "accuracy": 0.78,
+                "unans_correct_in_samples": 0.09,
+                "f1": 0.83
+              },
+              "overall_accuracy": 0.69,
+              "overall_f1": 0.44,
+              "balanced_accuracy": 0.43
+            }
           }
         }
       },
@@ -15118,6 +16682,61 @@
             "overall_accuracy": 0.04,
             "overall_f1": 0.03,
             "balanced_accuracy": 0.1
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 47,
+            "unans_correct_in_samples": 167,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 47,
+                "Pred_ANSWERABLE_wrong": 174,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 1475,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 1475,
+                "correct_present_count": 1475,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.03,
+                "accuracy": 0.21,
+                "ans_correct_in_samples": 0.21,
+                "f1": 0.05
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.11,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.03,
+              "overall_f1": 0.02,
+              "balanced_accuracy": 0.11
+            }
           }
         }
       }
@@ -15180,6 +16799,61 @@
             "overall_accuracy": 0.79,
             "overall_f1": 0.68,
             "balanced_accuracy": 0.69
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 18,
+            "unans_correct_in_samples": 0,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 18,
+                "Pred_ANSWERABLE_wrong": 8,
+                "Pred_Unanswerable": 5
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 17,
+                "Pred_Unanswerable": 92
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 5,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 17,
+                "correct_present_count": 17,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 92,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.42,
+                "accuracy": 0.58,
+                "ans_correct_in_samples": 0.58,
+                "f1": 0.49
+              },
+              "unanswerable": {
+                "precision": 0.95,
+                "accuracy": 0.84,
+                "unans_correct_in_samples": 0.0,
+                "f1": 0.89
+              },
+              "overall_accuracy": 0.78,
+              "overall_f1": 0.69,
+              "balanced_accuracy": 0.71
+            }
           }
         }
       },
@@ -15237,6 +16911,61 @@
             "overall_accuracy": 0.13,
             "overall_f1": 0.11,
             "balanced_accuracy": 0.3
+          },
+          "val_set": {
+            "ans_count": 31,
+            "unans_count": 110,
+            "ans_correct_in_samples": 21,
+            "unans_correct_in_samples": 7,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 21,
+                "Pred_ANSWERABLE_wrong": 10,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 110,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 110,
+                "correct_present_count": 110,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 141
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.15,
+                "accuracy": 0.68,
+                "ans_correct_in_samples": 0.68,
+                "f1": 0.24
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.06,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.15,
+              "overall_f1": 0.12,
+              "balanced_accuracy": 0.34
+            }
           }
         }
       }
@@ -15296,6 +17025,61 @@
             "overall_accuracy": 0.85,
             "overall_f1": 0.82,
             "balanced_accuracy": 0.83
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 246,
+            "unans_correct_in_samples": 600,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 246,
+                "Pred_ANSWERABLE_wrong": 46,
+                "Pred_Unanswerable": 47
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 68,
+                "Pred_Unanswerable": 596
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 47,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 68,
+                "correct_present_count": 68,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 596,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.68,
+                "accuracy": 0.73,
+                "ans_correct_in_samples": 0.73,
+                "f1": 0.7
+              },
+              "unanswerable": {
+                "precision": 0.93,
+                "accuracy": 0.89,
+                "unans_correct_in_samples": 0.9,
+                "f1": 0.91
+              },
+              "overall_accuracy": 0.84,
+              "overall_f1": 0.81,
+              "balanced_accuracy": 0.81
+            }
           }
         }
       },
@@ -15353,6 +17137,61 @@
             "overall_accuracy": 0.28,
             "overall_f1": 0.21,
             "balanced_accuracy": 0.42
+          },
+          "val_set": {
+            "ans_count": 339,
+            "unans_count": 668,
+            "ans_correct_in_samples": 268,
+            "unans_correct_in_samples": 13,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 268,
+                "Pred_ANSWERABLE_wrong": 71,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 668,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 668,
+                "correct_present_count": 668,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1007
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.27,
+                "accuracy": 0.79,
+                "ans_correct_in_samples": 0.79,
+                "f1": 0.4
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.02,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.27,
+              "overall_f1": 0.2,
+              "balanced_accuracy": 0.4
+            }
           }
         }
       }
@@ -15412,6 +17251,61 @@
             "overall_accuracy": 0.76,
             "overall_f1": 0.49,
             "balanced_accuracy": 0.5
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 49,
+            "unans_correct_in_samples": 345,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 13,
+                "Pred_ANSWERABLE_wrong": 52,
+                "Pred_Unanswerable": 156
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 88,
+                "Pred_Unanswerable": 1361
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 156,
+                "correct_present_count": 36,
+                "correct_was_most_freq_count": 36,
+                "avg_correct_freq_when_present": 1.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 88,
+                "correct_present_count": 88,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 1361,
+                "avg_total_clusters": 1.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.08,
+                "accuracy": 0.06,
+                "ans_correct_in_samples": 0.22,
+                "f1": 0.07
+              },
+              "unanswerable": {
+                "precision": 0.9,
+                "accuracy": 0.92,
+                "unans_correct_in_samples": 0.23,
+                "f1": 0.91
+              },
+              "overall_accuracy": 0.81,
+              "overall_f1": 0.49,
+              "balanced_accuracy": 0.49
+            }
           }
         }
       },
@@ -15470,6 +17364,61 @@
             "overall_accuracy": 0.04,
             "overall_f1": 0.04,
             "balanced_accuracy": 0.11
+          },
+          "val_set": {
+            "ans_count": 221,
+            "unans_count": 1475,
+            "ans_correct_in_samples": 49,
+            "unans_correct_in_samples": 142,
+            "matrix_gt_pred_counts": {
+              "ANSWERABLE": {
+                "Pred_ANSWERABLE_correct": 49,
+                "Pred_ANSWERABLE_wrong": 172,
+                "Pred_Unanswerable": 0
+              },
+              "ABSTAIN": {
+                "Pred_ANSWERABLE": 1475,
+                "Pred_Unanswerable": 0
+              }
+            },
+            "error_analysis": {
+              "FN_missed_answerable": {
+                "count": 0,
+                "correct_present_count": 0,
+                "correct_was_most_freq_count": 0,
+                "avg_correct_freq_when_present": 0.0
+              },
+              "FP_hallucinated_unanswerable": {
+                "count": 1475,
+                "correct_present_count": 1475,
+                "avg_winning_freq": 1.0,
+                "avg_total_clusters": 1.0
+              },
+              "TN_successful_abstention": {
+                "count": 0,
+                "avg_total_clusters": 0.0
+              },
+              "global_max_freq_histogram": {
+                "1": 1696
+              }
+            },
+            "metrics": {
+              "answerable": {
+                "precision": 0.03,
+                "accuracy": 0.22,
+                "ans_correct_in_samples": 0.22,
+                "f1": 0.05
+              },
+              "unanswerable": {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "unans_correct_in_samples": 0.1,
+                "f1": 0.0
+              },
+              "overall_accuracy": 0.03,
+              "overall_f1": 0.03,
+              "balanced_accuracy": 0.11
+            }
           }
         }
       }

@@ -16059,7 +16059,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": null,
+          "learned_threshold": 0.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16331,7 +16331,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": null,
+          "learned_threshold": 0.5,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16467,7 +16467,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": null,
+          "learned_threshold": 20.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16603,7 +16603,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": null,
+          "learned_threshold": 1000000.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -17136,7 +17136,7 @@
             "overall_f1": 0.51,
             "balanced_accuracy": 0.52
           },
-          "learned_threshold": 0.975,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -17535,7 +17535,7 @@
             "overall_f1": 0.51,
             "balanced_accuracy": 0.52
           },
-          "learned_threshold": 1.5,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -17668,7 +17668,7 @@
             "overall_f1": 0.51,
             "balanced_accuracy": 0.52
           },
-          "learned_threshold": 0.1595,
+          "learned_threshold": 0.0,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -18233,7 +18233,7 @@
             "overall_f1": 0.42,
             "balanced_accuracy": 0.42
           },
-          "learned_threshold": 0.275,
+          "learned_threshold": 0.3,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -18517,7 +18517,7 @@
             "overall_f1": 0.42,
             "balanced_accuracy": 0.43
           },
-          "learned_threshold": 0.6088,
+          "learned_threshold": 0.6128,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -18659,7 +18659,7 @@
             "overall_f1": 0.42,
             "balanced_accuracy": 0.42
           },
-          "learned_threshold": 8.5,
+          "learned_threshold": 8.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -18801,7 +18801,7 @@
             "overall_f1": 0.42,
             "balanced_accuracy": 0.42
           },
-          "learned_threshold": 5.079,
+          "learned_threshold": 4.4401,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -19373,7 +19373,7 @@
             "overall_f1": 0.43,
             "balanced_accuracy": 0.45
           },
-          "learned_threshold": 0.975,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -19802,7 +19802,7 @@
             "overall_f1": 0.43,
             "balanced_accuracy": 0.45
           },
-          "learned_threshold": 1.5,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -19945,7 +19945,7 @@
             "overall_f1": 0.43,
             "balanced_accuracy": 0.45
           },
-          "learned_threshold": 0.1595,
+          "learned_threshold": 0.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -20501,7 +20501,7 @@
             "overall_f1": 0.58,
             "balanced_accuracy": 0.58
           },
-          "learned_threshold": 0.925,
+          "learned_threshold": 0.95,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -20915,7 +20915,7 @@
             "overall_f1": 0.57,
             "balanced_accuracy": 0.58
           },
-          "learned_threshold": 1.5,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -21053,7 +21053,7 @@
             "overall_f1": 0.57,
             "balanced_accuracy": 0.58
           },
-          "learned_threshold": 0.1595,
+          "learned_threshold": 0.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -21605,7 +21605,7 @@
             "overall_f1": 0.5,
             "balanced_accuracy": 0.5
           },
-          "learned_threshold": 0.975,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -22019,7 +22019,7 @@
             "overall_f1": 0.5,
             "balanced_accuracy": 0.5
           },
-          "learned_threshold": 1.5,
+          "learned_threshold": 1.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,
@@ -22157,7 +22157,7 @@
             "overall_f1": 0.5,
             "balanced_accuracy": 0.5
           },
-          "learned_threshold": 0.1595,
+          "learned_threshold": 0.0,
           "val_set": {
             "ans_count": 50,
             "unans_count": 50,

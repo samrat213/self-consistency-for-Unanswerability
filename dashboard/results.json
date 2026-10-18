@@ -16059,7 +16059,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": -Infinity,
+          "learned_threshold": null,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16331,7 +16331,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": -Infinity,
+          "learned_threshold": null,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16467,7 +16467,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": Infinity,
+          "learned_threshold": null,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,
@@ -16603,7 +16603,7 @@
             "overall_f1": 0.77,
             "balanced_accuracy": 0.76
           },
-          "learned_threshold": Infinity,
+          "learned_threshold": null,
           "val_set": {
             "ans_count": 26,
             "unans_count": 26,

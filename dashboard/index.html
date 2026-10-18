@@ -89,6 +89,44 @@
         }
 
         // ---------------------------------------------------------
+        // MULTI-SELECT DROPDOWN (checkboxes; empty selection = all)
+        // ---------------------------------------------------------
+        function MultiSelect({ options, selected, onChange, allLabel }) {
+            const [open, setOpen] = useState(false);
+            const ref = useRef(null);
+            useEffect(() => {
+                const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+                document.addEventListener("mousedown", close);
+                return () => document.removeEventListener("mousedown", close);
+            }, []);
+            const toggle = (o) => onChange(selected.includes(o) ? selected.filter(x => x !== o) : [...selected, o]);
+            const label = selected.length === 0 ? allLabel
+                : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+            return (
+                <div className="relative" ref={ref}>
+                    <button type="button" onClick={() => setOpen(!open)} title={selected.join(", ")}
+                        className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2 text-left flex justify-between items-center">
+                        <span className="truncate">{label}</span><span className="text-gray-500 ml-2">&#9662;</span>
+                    </button>
+                    {open && (
+                        <div className="absolute z-40 mt-1 w-full max-h-72 overflow-auto bg-white border border-gray-300 rounded shadow-lg">
+                            <div className="flex justify-between px-3 py-2 border-b border-gray-200 text-xs">
+                                <button type="button" onClick={() => onChange([...options])} className="text-blue-700 hover:underline">Select all</button>
+                                <button type="button" onClick={() => onChange([])} className="text-gray-600 hover:underline">Clear (show all)</button>
+                            </div>
+                            {options.map(o => (
+                                <label key={o} className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-gray-100 cursor-pointer">
+                                    <input type="checkbox" checked={selected.includes(o)} onChange={() => toggle(o)} />
+                                    <span>{o}</span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ---------------------------------------------------------
         // MAIN APP DASHBOARD
         // ---------------------------------------------------------
         function App() {
@@ -107,7 +145,7 @@
             const [filterModel, setFilterModel] = useState("All");
             const [filterDataset, setFilterDataset] = useState("All");
             const [filterAwareness, setFilterAwareness] = useState("All");
-            const [filterMethod, setFilterMethod] = useState("All");
+            const [filterMethods, setFilterMethods] = useState([]);   // empty = all methods
             
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -189,9 +227,9 @@
                     return (filterModel === "All" || row.Model === filterModel) &&
                            (filterDataset === "All" || row.Dataset === filterDataset) &&
                            (filterAwareness === "All" || row.Awareness === filterAwareness) &&
-                           (filterMethod === "All" || row.Method === filterMethod);
+                           (filterMethods.length === 0 || filterMethods.includes(row.Method));
                 });
-            }, [data, filterModel, filterDataset, filterAwareness, filterMethod]);
+            }, [data, filterModel, filterDataset, filterAwareness, filterMethods]);
 
             const sortedData = useMemo(() => {
                 let sortableItems = [...filteredData];
@@ -294,10 +332,7 @@
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Method</label>
-                            <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2">
-                                <option value="All">All Methods</option>
-                                {uniqueMethods.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
+                            <MultiSelect options={uniqueMethods} selected={filterMethods} onChange={setFilterMethods} allLabel="All Methods" />
                         </div>
                     </div>
 

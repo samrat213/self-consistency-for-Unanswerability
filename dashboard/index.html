@@ -20,7 +20,12 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        const SECRET_PASSWORD = "research2026"; 
+        // SHA-256 of the password (the plain password is no longer in the source)
+        const PASSWORD_SHA256 = "737fcfd94d352730456aca4d15a4b3e69fccf5aa48fb33840b7f70b7105e01ce";
+        const sha256Hex = async (text) => {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        };
 
         // ---------------------------------------------------------
         // HISTOGRAM COMPONENT
@@ -203,9 +208,9 @@
                 return sortableItems;
             }, [filteredData, sortConfig]);
 
-            const handleLogin = (e) => {
+            const handleLogin = async (e) => {
                 e.preventDefault();
-                if (passwordInput === SECRET_PASSWORD) {
+                if (await sha256Hex(passwordInput) === PASSWORD_SHA256) {
                     setIsAuthenticated(true);
                 } else {
                     setLoginError(true);
@@ -329,7 +334,7 @@
                                             Unans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Unans_accuracy')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Overall_f1')}>
-                                            Overall Acc <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_f1')}</span>
+                                            Overall F1 <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_f1')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-purple-200" onClick={() => requestSort('ans_f1')}>
                                             Ans F1 <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_f1')}</span>

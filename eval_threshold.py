@@ -12,13 +12,13 @@ import concurrent.futures
 # ==========================================
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
-MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36']
-# MODELS = ["result_qwen38", 'result_gemini36']
+MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38']
+MODELS = ["result_qwen38", "result_qwen35", "result_qwen35_base", 'result_gemini36', 'result_gemini38']
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
 # Change this from 'overall_accuracy' to 'balanced_accuracy'
-TARGET_METRIC = 'balanced_accuracy'
+TARGET_METRIC = 'overall_f1'
 datasets = [
     # 'gaia', 
     # 'gsm8k-mip', 
@@ -31,9 +31,13 @@ datasets = [
     # 'ReliableMath', 
     'brokenmath', 
     # 'brokenmath_combined', 
-    'brokenmath_proof_answerable', 
-    # "UA_commonsense",
-    # "UA_math"
+    # 'brokenmath_proof_answerable', 
+    
+    'ReliableMath', 
+    "brokenmath_type_answer_AU",
+    "brokenmath_type_proof_AU"
+    "UA_commonsense",
+    "UA_math"
 
 ]
 
@@ -455,6 +459,7 @@ def extract_target_score(res):
     """Safely routes the target metric requested by the user at the top of the file."""
     if TARGET_METRIC == 'overall_accuracy': return res["metrics"]["overall_accuracy"]
     elif TARGET_METRIC == 'balanced_accuracy': return res["metrics"]["balanced_accuracy"]
+    elif TARGET_METRIC == 'overall_f1': return res["metrics"]["overall_f1"]
     elif TARGET_METRIC == 'ans_precision': return res["metrics"]["answerable"]["precision"]
     elif TARGET_METRIC == 'ans_accuracy': return res["metrics"]["answerable"]["accuracy"]
     elif TARGET_METRIC == 'ans_f1': return res["metrics"]["answerable"]["f1"]
@@ -477,7 +482,8 @@ def learn_best_threshold(val_data, method):
     elif method == 'crp_theta': test_thresholds =  list(np.arange(0, 20, 0.1))
     elif method == 'Adaptive_Consistency_beta':
         # Test thresholds: 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.99
-        test_thresholds = [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.99]
+        # test_thresholds = [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.99]
+        test_thresholds =  list(np.arange(0, 1, 0.05))
     else: return None
     
     for t in test_thresholds:
@@ -542,9 +548,10 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
     if 'Greedy' in req_exps:
         greedy_all_data = load_data(greedy_file)
         if greedy_all_data:
-            _, greedy_test_data = split_output_data(greedy_all_data, val_q, test_q)
+            greedy_val_data, greedy_test_data = split_output_data(greedy_all_data, val_q, test_q)
             if greedy_test_data:
                 local_result['Greedy'] = process_run(greedy_test_data, method='greedy')
+                local_result['Greedy']['val_set']  = process_run(greedy_val_data, method='greedy')
             
     # 2. Sampling Experiments
     sampling_reqs = [e for e in req_exps if e != 'greedy']
@@ -556,35 +563,42 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
             if val_samples and test_samples:
                 if 'self Consistency' in req_exps:
                     local_result['self Consistency'] = process_run(test_samples, method='most_freq')
+                    local_result['self Consistency']['val_set'] = process_run(val_samples, method='most_freq')
                 
                 if 'self Consistency + T' in req_exps:
                     opt_majority = learn_best_threshold(val_samples, 'majority')
                     local_result['self Consistency + T'] = process_run(test_samples, method='majority', threshold=opt_majority)
+                    local_result['self Consistency + T']['val_set'] = process_run(val_samples, method='majority', threshold=opt_majority)
                     local_result['self Consistency + T']['learned_threshold'] = opt_majority
 
                 if 'Majority' in req_exps:
                     local_result['Majority'] = process_run(test_samples, method='majority', threshold=0.5)
                     local_result['Majority']['learned_threshold'] = 0.5
+                    local_result['Majority']['val_set'] = process_run(val_samples, method='majority', threshold=0.5)
                 
                 
                 if 'scUn' in req_exps:
                     opt_adapted = learn_best_threshold(val_samples, 'adapted_sc')
                     local_result['scUn'] = process_run(test_samples, method='adapted_sc', threshold=opt_adapted)
+                    local_result['scUn']['val_set']  = process_run(val_samples, method='adapted_sc', threshold=opt_adapted)
                     local_result['scUn']['learned_threshold'] = opt_adapted
                 
                 if 'CRP_k' in req_exps:
                     opt_crp_k = learn_best_threshold(val_samples, 'crp_k')
                     local_result['CRP_k'] = process_run(test_samples, method='crp_k', threshold=opt_crp_k)
+                    local_result['CRP_k']['val_set'] = process_run(val_samples, method='crp_k', threshold=opt_crp_k)
                     local_result['CRP_k']['learned_threshold'] = opt_crp_k
                 
                 if 'CRP_theta' in req_exps:
                     opt_crp_theta = learn_best_threshold(val_samples, 'crp_theta')
                     local_result['CRP_theta'] = process_run(test_samples, method='crp_theta', threshold=opt_crp_theta)
+                    local_result['CRP_theta']['val_set']  = process_run(val_samples, method='crp_theta', threshold=opt_crp_theta)
                     local_result['CRP_theta']['learned_threshold'] = round(opt_crp_theta, 2)
                     
                 if 'Adaptive_Consistency_beta' in req_exps:
                     opt_beta = learn_best_threshold(val_samples, 'Adaptive_Consistency_beta')
                     local_result['Adaptive_Consistency_beta'] = process_run(test_samples, method='Adaptive_Consistency_beta', threshold=opt_beta)
+                    local_result['Adaptive_Consistency_beta']['val_set'] = process_run(val_samples, method='Adaptive_Consistency_beta', threshold=opt_beta)
                     local_result['Adaptive_Consistency_beta']['learned_threshold'] = opt_beta
                     
     return model, dataset, aware, local_result
@@ -674,6 +688,7 @@ if __name__ == "__main__":
     else:
         master_result = {model: {} for model in MODELS}
 
+    print(f"Running Models: {MODELS}")
     print(f"Running experiments: {REQUESTED_EXPERIMENTS}")
     print("Pre-fetching dataset splits...")
     dataset_splits = {ds: {'val': get_split_identifiers('val', ds), 'test': get_split_identifiers('test', ds)} for ds in datasets}

@@ -200,9 +200,6 @@
                                         const fn_missed = err_analysis.FN_missed_answerable || {};
                                         const fp_hallucinated = err_analysis.FP_hallucinated_unanswerable || {};
                                         
-                                        // ------------------------------------------------
-                                        // Extract BOTH histograms safely
-                                        // ------------------------------------------------
                                         const ans_hist = err_analysis.answerable_max_freq_histogram || null;
                                         const unans_hist = err_analysis.unanswerable_max_freq_histogram || null;
 
@@ -223,10 +220,11 @@
                                             ans_correct_in_samples: details.ans_correct_in_samples ?? ans.ans_correct_in_samples,
                                             unans_correct_in_samples: details.unans_correct_in_samples ?? unans.unans_correct_in_samples,
                                             FN_correct_present: fn_missed.correct_present_count,
+                                            FN_most_freq: fn_missed.correct_was_most_freq_count, // <-- NEW FIELD
                                             FP_correct_present: fp_hallucinated.correct_present_count,
                                             Threshold: details.learned_threshold,
                                             ThresholdLabel: details.threshold_label,
-                                            Histograms: { answerable: ans_hist, unanswerable: unans_hist }, // Store grouped
+                                            Histograms: { answerable: ans_hist, unanswerable: unans_hist },
                                             rawDetails: details
                                         };
                                         parsedRows.push(row);
@@ -402,16 +400,19 @@
                                             Unans F1 <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_f1')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-emerald-200" onClick={() => requestSort('ans_correct_in_samples')}>
-                                            Ans Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_correct_in_samples')}</span>
+                                            Ans Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_correct_in_samples')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-emerald-200" onClick={() => requestSort('unans_correct_in_samples')}>
-                                            Unans Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_correct_in_samples')}</span>
+                                            Unans Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_correct_in_samples')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-red-200" onClick={() => requestSort('FN_correct_present')}>
-                                            FN Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('FN_correct_present')}</span>
+                                            FN Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('FN_correct_present')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-red-200" onClick={() => requestSort('FN_most_freq')}>
+                                            FN Most Freq <span className="text-gray-400 text-[10px]">{getSortIndicator('FN_most_freq')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-red-200" onClick={() => requestSort('FP_correct_present')}>
-                                            FP Correct Present <span className="text-gray-400 text-[10px]">{getSortIndicator('FP_correct_present')}</span>
+                                            FP Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('FP_correct_present')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Threshold')}>
                                             Threshold <span className="text-gray-400 text-[10px]">{getSortIndicator('Threshold')}</span>
@@ -422,7 +423,6 @@
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {sortedData.map((row, index) => {
-                                        // Check if this row has at least one valid histogram key
                                         const hasHistogram = row.Histograms && (
                                             (row.Histograms.answerable && Object.keys(row.Histograms.answerable).length > 0) ||
                                             (row.Histograms.unanswerable && Object.keys(row.Histograms.unanswerable).length > 0)
@@ -449,10 +449,10 @@
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
                                                 <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>
+                                                <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FN_most_freq)}</td>
                                                 <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{row.ThresholdLabel ?? formatDecimal(row.Threshold)}</td>
                                                 
-                                                {/* Histogram Column */}
                                                 <td className="px-4 py-3 text-center border-l border-gray-200">
                                                     {hasHistogram ? (
                                                         <button onClick={() => setSelectedHistogram(row)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-[10px] font-bold transition shadow-sm border border-blue-300">
@@ -471,13 +471,12 @@
                                             </tr>
                                         );
                                     })}
-                                    {sortedData.length === 0 && <tr><td colSpan="19" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
+                                    {sortedData.length === 0 && <tr><td colSpan="20" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    {/* Modal: RAW JSON Data */}
                     {selectedRawRow && (
                         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50 backdrop-blur-sm">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
@@ -494,7 +493,6 @@
                         </div>
                     )}
 
-                    {/* Modal: HISTOGRAM VISUALIZATION */}
                     {selectedHistogram && (
                         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50 backdrop-blur-sm">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col relative">

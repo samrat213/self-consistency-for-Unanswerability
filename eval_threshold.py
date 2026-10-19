@@ -3,7 +3,7 @@ import json
 from tqdm import tqdm
 import numpy as np
 
-# import scipy.special
+import scipy.special
 import concurrent.futures
 
 
@@ -13,7 +13,7 @@ import concurrent.futures
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
 MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-MODELS = ["result_qwen38"]
+# MODELS = ["result_qwen38"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -35,17 +35,17 @@ datasets = [
     
     'ReliableMath', 
     "brokenmath_type_answer_AU",
-    "brokenmath_type_proof_AU"
+    "brokenmath_type_proof_AU",
     "UA_commonsense",
     "UA_math"
 
 ]
 
 REQUESTED_EXPERIMENTS = [
-    'Greedy', 
-    'Majority', 'self Consistency', 'self Consistency + T', 
-    'scUn',
-    'CRP_k','CRP_theta',
+    # 'Greedy', 
+    # 'Majority', 'self Consistency', 'self Consistency + T', 
+    # 'scUn',
+    # 'CRP_k','CRP_theta',
     'Adaptive_Consistency_beta'
     ]
 
@@ -421,7 +421,7 @@ def calculate_metrics(res):
     }
     return res
 
-def process_run(data, method, threshold=None):
+def process_run(data, method, threshold=None, ignore_abstention_tokens = False):
     res = {
         'ans_count': 0, 'unans_count': 0,
         'ans_correct_in_samples': 0,
@@ -439,11 +439,11 @@ def process_run(data, method, threshold=None):
         }
     }
     
-    for item in data:
+    for item in tqdm(data):
         should_abstain = item.get("should_abstain")
         gt = "ABSTAIN" if should_abstain is True else "ANSWERABLE"
         
-        max_freq, total_clusters, correct_present, correct_freq, is_correct_most_freq = get_item_metadata(item)
+        max_freq, total_clusters, correct_present, correct_freq, is_correct_most_freq = get_item_metadata(item, ignore_abstention_tokens = ignore_abstention_tokens)
         
         hist_key = str(min(max_freq, 20))
         
@@ -558,7 +558,7 @@ def learn_best_threshold(val_data, method):
     else: return None
     
     for t in test_thresholds:
-        res = process_run(val_data, method=method, threshold=t)
+        res = process_run(val_data, method=method, threshold=t, ignore_abstention_tokens = True)
         score = extract_target_score(res)
         if score > best_score:
             best_score = score
@@ -621,7 +621,7 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
         if greedy_all_data:
             greedy_val_data, greedy_test_data = split_output_data(greedy_all_data, val_q, test_q)
             if greedy_test_data:
-                local_result['Greedy'] = process_run(greedy_test_data, method='greedy')
+                local_result['Greedy'] = process_run(greedy_test_data, method='greedy', )
                 local_result['Greedy']['val_set']  = process_run(greedy_val_data, method='greedy')
             
     # 2. Sampling Experiments
@@ -778,7 +778,9 @@ if __name__ == "__main__":
     # 2. Execute tasks concurrently
     # Uses min(32, cpu_count + 4) workers by default. Adjust max_workers if you have high core counts.
     print(f"Dispatching {len(tasks)} tasks to thread pool...")
-    print(tasks)
+    
+    for t in tasks:
+        print(t[0], t[1], t[2],t[5])
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit all tasks to the executor
         futures = {executor.submit(process_combination, *task): task for task in tasks}

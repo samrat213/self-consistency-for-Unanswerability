@@ -12,8 +12,8 @@ import concurrent.futures
 # ==========================================
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
-MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38']
-MODELS = ["result_qwen38", "result_qwen35", "result_qwen35_base", 'result_gemini36', 'result_gemini38']
+MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
+# MODELS = ["result_qwen38", "result_qwen35", "result_qwen35_base", 'result_gemini36', 'result_gemini38']
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -116,7 +116,7 @@ def get_item_metadata(item):
 
     total_clusters = len(clusters)
     cluster_sizes = [len(c) for c in clusters]
-    max_freq = max(cluster_sizes) if cluster_sizes else 0
+    max_freq = max(cluster_sizes) if cluster_sizes else 1
 
     # 3. Analyze Correct Answers
     correct_freq = sum(1 for x in is_correct_list if x is True)
@@ -450,7 +450,7 @@ def process_run(data, method, threshold=None):
     del analysis["TN_successful_abstention"]["sum_total_clusters"]
     
     # Strip zero-value bins from histogram
-    res["error_analysis"]["global_max_freq_histogram"] = {k: v for k, v in analysis["global_max_freq_histogram"].items() if v > 0}
+    # res["error_analysis"]["global_max_freq_histogram"] = {k: v for k, v in analysis["global_max_freq_histogram"].items() if v > 0}
 
     return calculate_metrics(res)
 # --- 3. OPTIMIZATION LOOP ---

@@ -12,8 +12,8 @@ import concurrent.futures
 # ==========================================
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
-# MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-MODELS = ["result_qwen38",]
+MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
+# MODELS = ["result_qwen38",]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -33,11 +33,11 @@ datasets = [
     # 'brokenmath_combined', 
     # 'brokenmath_proof_answerable', 
     
-    # 'ReliableMath', 
+    'ReliableMath', 
     "brokenmath_type_answer_AU",
     "brokenmath_type_proof_AU"
-    # "UA_commonsense",
-    # "UA_math"
+    "UA_commonsense",
+    "UA_math"
 
 ]
 
@@ -116,7 +116,7 @@ def get_item_metadata(item):
 
     total_clusters = len(clusters)
     cluster_sizes = [len(c) for c in clusters]
-    max_freq = max(cluster_sizes) if cluster_sizes else 1
+    max_freq = max(cluster_sizes) if cluster_sizes else 0
 
     # 3. Analyze Correct Answers
     correct_freq = sum(1 for x in is_correct_list if x is True)
@@ -349,48 +349,39 @@ def process_run(data, method, threshold=None):
     res = {
         'ans_count': 0, 'unans_count': 0,
         'ans_correct_in_samples': 0,
-        'unans_correct_in_samples': 0,  # Tracks global presence for unanswerable items
-        # "correct_was_most_freq_count": 0,
+        'unans_correct_in_samples': 0,  
         "matrix_gt_pred_counts": {
             "ANSWERABLE": {"Pred_ANSWERABLE_correct": 0, "Pred_ANSWERABLE_wrong": 0, "Pred_Unanswerable": 0},
             "ABSTAIN": {"Pred_ANSWERABLE": 0, "Pred_Unanswerable": 0}
         },
         "error_analysis": {
-            "FN_missed_answerable": {
-                "count": 0, "correct_present_count": 0, "correct_was_most_freq_count": 0, "sum_correct_freq": 0
-            },
-            "FP_hallucinated_unanswerable": {
-                "count": 0, "sum_winning_freq": 0, "sum_total_clusters": 0, 'correct_present_count':0
-            },
-            "TN_successful_abstention": {
-                "count": 0, "sum_total_clusters": 0
-            },
-            "global_max_freq_histogram": {str(i): 0 for i in range(21)} 
+            "FN_missed_answerable": {"count": 0, "correct_present_count": 0, "correct_was_most_freq_count": 0, "sum_correct_freq": 0},
+            "FP_hallucinated_unanswerable": {"count": 0, "sum_winning_freq": 0, "sum_total_clusters": 0, 'correct_present_count':0},
+            "TN_successful_abstention": {"count": 0, "sum_total_clusters": 0},
+            "answerable_max_freq_histogram": {str(i): 0 for i in range(21)},
+            "unanswerable_max_freq_histogram": {str(i): 0 for i in range(21)} 
         }
     }
     
-    for item in tqdm(data):
+    for item in data:
         should_abstain = item.get("should_abstain")
         gt = "ABSTAIN" if should_abstain is True else "ANSWERABLE"
         
-        # Extract Deep Error Analysis Metadata
         max_freq, total_clusters, correct_present, correct_freq, is_correct_most_freq = get_item_metadata(item)
+        
+        hist_key = str(min(max_freq, 20))
         
         if gt == "ABSTAIN": 
             res['unans_count'] += 1
-            if correct_present:
-                res['unans_correct_in_samples'] += 1
+            if correct_present: res['unans_correct_in_samples'] += 1
+            if hist_key in res["error_analysis"]["unanswerable_max_freq_histogram"]:
+                res["error_analysis"]["unanswerable_max_freq_histogram"][hist_key] += 1
         else: 
             res['ans_count'] += 1
-            if correct_present:
-                res['ans_correct_in_samples'] += 1
-        
-        # Update Histogram
-        hist_key = str(min(max_freq, 20))
-        if hist_key in res["error_analysis"]["global_max_freq_histogram"]:
-            res["error_analysis"]["global_max_freq_histogram"][hist_key] += 1
+            if correct_present: res['ans_correct_in_samples'] += 1
+            if hist_key in res["error_analysis"]["answerable_max_freq_histogram"]:
+                res["error_analysis"]["answerable_max_freq_histogram"][hist_key] += 1
 
-        # Determine Consensus
         if method == 'greedy':
             pred_val = item.get("pred_label", [])
             eff_pred = pred_val[0] if isinstance(pred_val, list) and len(pred_val) > 0 else pred_val
@@ -404,10 +395,10 @@ def process_run(data, method, threshold=None):
             eff_pred, eff_correct = get_crp_consensus(item, method=method, threshold=threshold)
         elif method == 'Adaptive_Consistency_beta':
             eff_pred, eff_correct = get_Adaptive_Consistency_beta_consensus(item, threshold=threshold)
+            
         is_pred_unanswerable = eff_pred in ["DATA_UNCERTAIN", "MODEL_UNCERTAIN", "ABSTAIN"]
         is_pred_answerable = eff_pred == "ANSWERABLE"
 
-        # Update Matrix & Analytical Stats
         if gt == "ANSWERABLE":
             if is_pred_answerable:
                 if eff_correct: res["matrix_gt_pred_counts"][gt]['Pred_ANSWERABLE_correct'] += 1
@@ -433,7 +424,6 @@ def process_run(data, method, threshold=None):
                 res["error_analysis"]["TN_successful_abstention"]["count"] += 1
                 res["error_analysis"]["TN_successful_abstention"]["sum_total_clusters"] += total_clusters
 
-    # Finalize Averages
     analysis = res["error_analysis"]
     fn_cp = analysis["FN_missed_answerable"]["correct_present_count"]
     analysis["FN_missed_answerable"]["avg_correct_freq_when_present"] = round(analysis["FN_missed_answerable"]["sum_correct_freq"] / fn_cp, 2) if fn_cp > 0 else 0.0
@@ -449,8 +439,13 @@ def process_run(data, method, threshold=None):
     analysis["TN_successful_abstention"]["avg_total_clusters"] = round(analysis["TN_successful_abstention"]["sum_total_clusters"] / tn_c, 2) if tn_c > 0 else 0.0
     del analysis["TN_successful_abstention"]["sum_total_clusters"]
     
-    # Strip zero-value bins from histogram
-    # res["error_analysis"]["global_max_freq_histogram"] = {k: v for k, v in analysis["global_max_freq_histogram"].items() if v > 0}
+    # Strip zero-value bins from histograms
+    res["error_analysis"]["answerable_max_freq_histogram"] = {
+        k: v for k, v in analysis["answerable_max_freq_histogram"].items() if v > 0
+    }
+    res["error_analysis"]["unanswerable_max_freq_histogram"] = {
+        k: v for k, v in analysis["unanswerable_max_freq_histogram"].items() if v > 0
+    }
 
     return calculate_metrics(res)
 # --- 3. OPTIMIZATION LOOP ---

@@ -20,7 +20,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // SHA-256 of the password (the plain password is no longer in the source)
+        // SHA-256 of the password
         const PASSWORD_SHA256 = "737fcfd94d352730456aca4d15a4b3e69fccf5aa48fb33840b7f70b7105e01ce";
         const sha256Hex = async (text) => {
             const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -29,44 +29,68 @@
 
         // ---------------------------------------------------------
         // HISTOGRAM COMPONENT
-        // Handles rendering the Chart.js canvas cleanly
+        // Handles rendering dual datasets in Chart.js
         // ---------------------------------------------------------
-        function HistogramChart({ data, title }) {
+        function HistogramChart({ histograms, title }) {
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
             useEffect(() => {
-                if (!chartRef.current || !data) return;
+                if (!chartRef.current || !histograms) return;
+
+                const { answerable, unanswerable } = histograms;
+                
+                // Only render if at least one histogram has data
+                if (!answerable && !unanswerable) return;
 
                 // Cleanup previous chart instance if it exists
                 if (chartInstance.current) {
                     chartInstance.current.destroy();
                 }
 
-                // Prepare data for Chart.js
-                // Sort keys numerically to ensure the X-axis is in order (e.g., 2, 3, ... 20)
-                const labels = Object.keys(data).sort((a, b) => Number(a) - Number(b));
-                const values = labels.map(key => data[key]);
+                // 1. Get all unique buckets (keys) from BOTH histograms
+                const allKeys = new Set([
+                    ...(answerable ? Object.keys(answerable) : []),
+                    ...(unanswerable ? Object.keys(unanswerable) : [])
+                ]);
 
+                // 2. Sort the buckets numerically for the X-axis
+                const labels = Array.from(allKeys).sort((a, b) => Number(a) - Number(b));
+
+                // 3. Map values to labels, defaulting to 0 if a bucket is missing
+                const ansValues = labels.map(key => (answerable && answerable[key]) ? answerable[key] : 0);
+                const unansValues = labels.map(key => (unanswerable && unanswerable[key]) ? unanswerable[key] : 0);
+
+                // 4. Create the Chart
                 const ctx = chartRef.current.getContext('2d');
                 chartInstance.current = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: 'Frequency Count',
-                            data: values,
-                            backgroundColor: 'rgba(59, 130, 246, 0.5)', // tailwind blue-500
-                            borderColor: 'rgb(37, 99, 235)', // tailwind blue-600
-                            borderWidth: 1,
-                            borderRadius: 4
-                        }]
+                        datasets: [
+                            {
+                                label: 'Answerable Max Freq',
+                                data: ansValues,
+                                backgroundColor: 'rgba(16, 185, 129, 0.6)', // Emerald green
+                                borderColor: 'rgb(5, 150, 105)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Unanswerable Max Freq',
+                                data: unansValues,
+                                backgroundColor: 'rgba(244, 63, 94, 0.6)', // Rose red
+                                borderColor: 'rgb(225, 29, 72)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: { display: true, position: 'top' }, // Turn legend ON to differentiate
                             title: { display: true, text: title, font: { size: 16 } }
                         },
                         scales: {
@@ -79,17 +103,17 @@
                 return () => {
                     if (chartInstance.current) chartInstance.current.destroy();
                 };
-            }, [data, title]);
+            }, [histograms, title]);
 
             return (
-                <div className="w-full h-64 mt-4">
+                <div className="w-full h-72 mt-4">
                     <canvas ref={chartRef}></canvas>
                 </div>
             );
         }
 
         // ---------------------------------------------------------
-        // MULTI-SELECT DROPDOWN (checkboxes; empty selection = all)
+        // MULTI-SELECT DROPDOWN
         // ---------------------------------------------------------
         function MultiSelect({ options, selected, onChange, allLabel }) {
             const [open, setOpen] = useState(false);
@@ -138,14 +162,13 @@
             const [loading, setLoading] = useState(true);
             const [error, setError] = useState(null);
             
-            // Modal States
             const [selectedRawRow, setSelectedRawRow] = useState(null);
             const [selectedHistogram, setSelectedHistogram] = useState(null);
             
             const [filterModel, setFilterModel] = useState("All");
             const [filterDataset, setFilterDataset] = useState("All");
             const [filterAwareness, setFilterAwareness] = useState("All");
-            const [filterMethods, setFilterMethods] = useState([]);   // empty = all methods
+            const [filterMethods, setFilterMethods] = useState([]);
             
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -177,8 +200,11 @@
                                         const fn_missed = err_analysis.FN_missed_answerable || {};
                                         const fp_hallucinated = err_analysis.FP_hallucinated_unanswerable || {};
                                         
-                                        // Extract Histogram safely
-                                        const histogram = err_analysis.global_max_freq_histogram || null;
+                                        // ------------------------------------------------
+                                        // Extract BOTH histograms safely
+                                        // ------------------------------------------------
+                                        const ans_hist = err_analysis.answerable_max_freq_histogram || null;
+                                        const unans_hist = err_analysis.unanswerable_max_freq_histogram || null;
 
                                         const row = {
                                             id: `${model}-${dataset}-${mode_str}-${method}`,
@@ -196,12 +222,11 @@
                                             unans_f1: unans.f1,
                                             ans_correct_in_samples: details.ans_correct_in_samples ?? ans.ans_correct_in_samples,
                                             unans_correct_in_samples: details.unans_correct_in_samples ?? unans.unans_correct_in_samples,
-                                            // FN_count:ans.
                                             FN_correct_present: fn_missed.correct_present_count,
                                             FP_correct_present: fp_hallucinated.correct_present_count,
                                             Threshold: details.learned_threshold,
-                                            ThresholdLabel: details.threshold_label, // e.g. "u≥1 · K≤2" for two-threshold rules
-                                            Histogram: histogram, // Storing for the button
+                                            ThresholdLabel: details.threshold_label,
+                                            Histograms: { answerable: ans_hist, unanswerable: unans_hist }, // Store grouped
                                             rawDetails: details
                                         };
                                         parsedRows.push(row);
@@ -267,7 +292,6 @@
             const formatDecimal = (num) => (num !== null && num !== undefined) ? Number(num).toFixed(2) : '-';
             const formatInt = (num) => (num !== null && num !== undefined) ? Number(num).toString() : '-';
 
-            // --- LOGIN SCREEN ---
             if (!isAuthenticated) {
                 return (
                     <div className="flex-1 flex items-center justify-center bg-gray-100">
@@ -298,7 +322,6 @@
             if (loading) return <div className="flex-1 flex items-center justify-center text-xl text-blue-600 font-bold">Loading Model Data...</div>;
             if (error) return <div className="flex-1 flex items-center justify-center text-xl text-red-600 font-bold">Error: {error}</div>;
 
-            // --- DASHBOARD TABLE ---
             return (
                 <div className="mx-auto p-6 flex-1 w-full flex flex-col h-full">
                     <div className="flex justify-between items-end mb-4 shrink-0">
@@ -398,49 +421,57 @@
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {sortedData.map((row, index) => (
-                                        <tr key={row.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                                            <td className="px-4 py-3 font-bold text-blue-900">{row.Model}</td>
-                                            <td className="px-4 py-3 font-semibold border-l border-gray-200">{row.Dataset}</td>
-                                            <td className="px-4 py-3 border-l border-gray-200 text-indigo-700 font-mono">{formatInt(row.n_ans)}</td>
-                                            <td className="px-4 py-3 text-indigo-700 font-mono">{formatInt(row.n_unans)}</td>
-                                            <td className="px-4 py-3 border-l border-gray-200">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${row.Awareness === 'Aware' ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-800'}`}>
-                                                    {row.Awareness}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-600">{row.Method}</td>
-                                            <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
-                                            <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
-                                            <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_f1)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-purple-800 font-mono">{formatDecimal(row.ans_f1)}</td>
-                                            <td className="px-4 py-3 text-right text-purple-800 font-mono">{formatDecimal(row.unans_f1)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
-                                            <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>
-                                            <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{row.ThresholdLabel ?? formatDecimal(row.Threshold)}</td>
-                                            
-                                            {/* Histogram Column */}
-                                            <td className="px-4 py-3 text-center border-l border-gray-200">
-                                                {row.Histogram && Object.keys(row.Histogram).length > 0 ? (
-                                                    <button onClick={() => setSelectedHistogram(row)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-[10px] font-bold transition shadow-sm border border-blue-300">
-                                                        CHART
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-gray-300 text-[10px]">N/A</span>
-                                                )}
-                                            </td>
+                                    {sortedData.map((row, index) => {
+                                        // Check if this row has at least one valid histogram key
+                                        const hasHistogram = row.Histograms && (
+                                            (row.Histograms.answerable && Object.keys(row.Histograms.answerable).length > 0) ||
+                                            (row.Histograms.unanswerable && Object.keys(row.Histograms.unanswerable).length > 0)
+                                        );
 
-                                            <td className="px-4 py-3 text-center">
-                                                <button onClick={() => setSelectedRawRow(row)} className="bg-gray-800 hover:bg-black text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">
-                                                    RAW
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {sortedData.length === 0 && <tr><td colSpan="18" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
+                                        return (
+                                            <tr key={row.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                                                <td className="px-4 py-3 font-bold text-blue-900">{row.Model}</td>
+                                                <td className="px-4 py-3 font-semibold border-l border-gray-200">{row.Dataset}</td>
+                                                <td className="px-4 py-3 border-l border-gray-200 text-indigo-700 font-mono">{formatInt(row.n_ans)}</td>
+                                                <td className="px-4 py-3 text-indigo-700 font-mono">{formatInt(row.n_unans)}</td>
+                                                <td className="px-4 py-3 border-l border-gray-200">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${row.Awareness === 'Aware' ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-800'}`}>
+                                                        {row.Awareness}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-600">{row.Method}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
+                                                <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_f1)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-purple-800 font-mono">{formatDecimal(row.ans_f1)}</td>
+                                                <td className="px-4 py-3 text-right text-purple-800 font-mono">{formatDecimal(row.unans_f1)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
+                                                <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>
+                                                <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{row.ThresholdLabel ?? formatDecimal(row.Threshold)}</td>
+                                                
+                                                {/* Histogram Column */}
+                                                <td className="px-4 py-3 text-center border-l border-gray-200">
+                                                    {hasHistogram ? (
+                                                        <button onClick={() => setSelectedHistogram(row)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-[10px] font-bold transition shadow-sm border border-blue-300">
+                                                            CHART
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-300 text-[10px]">N/A</span>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-4 py-3 text-center">
+                                                    <button onClick={() => setSelectedRawRow(row)} className="bg-gray-800 hover:bg-black text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">
+                                                        RAW
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {sortedData.length === 0 && <tr><td colSpan="19" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
                                 </tbody>
                             </table>
                         </div>
@@ -466,10 +497,10 @@
                     {/* Modal: HISTOGRAM VISUALIZATION */}
                     {selectedHistogram && (
                         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50 backdrop-blur-sm">
-                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col relative">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col relative">
                                 <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                     <h2 className="text-xl font-bold text-gray-800">
-                                        Max Freq Histogram
+                                        Frequency Distributions
                                         <span className="block text-sm text-gray-500 font-normal">
                                             {selectedHistogram.Model} / {selectedHistogram.Dataset} / {selectedHistogram.Method}
                                         </span>
@@ -477,14 +508,13 @@
                                     <button onClick={() => setSelectedHistogram(null)} className="text-gray-400 hover:text-gray-900 text-3xl leading-none font-bold p-2">&times;</button>
                                 </div>
                                 <div className="p-6 bg-white">
-                                    {/* Component Call for Chart.js */}
                                     <HistogramChart 
-                                        data={selectedHistogram.Histogram} 
-                                        title={`Global Max Freq Histogram`} 
+                                        histograms={selectedHistogram.Histograms} 
+                                        title={`Answerable vs. Unanswerable`} 
                                     />
                                 </div>
                                 <div className="p-4 border-t border-gray-200 bg-gray-50 text-xs font-mono text-gray-500 max-h-32 overflow-y-auto">
-                                    <strong>Raw Data: </strong> {JSON.stringify(selectedHistogram.Histogram)}
+                                    <strong>Raw Data: </strong> {JSON.stringify(selectedHistogram.Histograms)}
                                 </div>
                             </div>
                         </div>

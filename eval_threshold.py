@@ -13,7 +13,7 @@ import concurrent.futures
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
 MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-MODELS = ["result_gemini36"]
+MODELS = ["result_qwen38"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -33,9 +33,9 @@ datasets = [
     # 'brokenmath_combined', 
     # 'brokenmath_proof_answerable', 
     
-    # 'ReliableMath', 
+    'ReliableMath', 
     "brokenmath_type_answer_AU",
-    # "brokenmath_type_proof_AU",
+    "brokenmath_type_proof_AU",
     # "UA_commonsense",
     # "UA_math"
 
@@ -445,7 +445,12 @@ def process_run(data, method, threshold=None, ignore_abstention_tokens = False):
         
         max_freq, total_clusters, correct_present, correct_freq, is_correct_most_freq = get_item_metadata(item, ignore_abstention_tokens = ignore_abstention_tokens)
         
-        hist_key = str(min(max_freq, 20))
+        if ignore_abstention_tokens ==False:
+            max_freq_ign, _, _, _, _ = get_item_metadata(item, ignore_abstention_tokens = True)
+        else:
+            max_freq_ign = max_freq
+        
+        hist_key = str(min(max_freq_ign, 20))
         
         if gt == "ABSTAIN": 
             res['unans_count'] += 1

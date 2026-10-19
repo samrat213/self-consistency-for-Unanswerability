@@ -200,6 +200,7 @@
                                             FN_correct_present: fn_missed.correct_present_count,
                                             FP_correct_present: fp_hallucinated.correct_present_count,
                                             Threshold: details.learned_threshold,
+                                            ThresholdLabel: details.threshold_label, // e.g. "u≥1 · K≤2" for two-threshold rules
                                             Histogram: histogram, // Storing for the button
                                             rawDetails: details
                                         };
@@ -419,7 +420,7 @@
                                             <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
                                             <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>
                                             <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
-                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{formatDecimal(row.Threshold)}</td>
+                                            <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{row.ThresholdLabel ?? formatDecimal(row.Threshold)}</td>
                                             
                                             {/* Histogram Column */}
                                             <td className="px-4 py-3 text-center border-l border-gray-200">

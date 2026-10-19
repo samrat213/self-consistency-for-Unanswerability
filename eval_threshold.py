@@ -13,7 +13,7 @@ import concurrent.futures
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
 MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-# MODELS = ["result_qwen38",]
+MODELS = ["result_qwen38","result_qwen35", "result_qwen35_base"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -72,40 +72,115 @@ def get_mle_theta(N, K):
         else: low = mid
     return mid
 
-def get_item_metadata(item):
-    """Extracts analytical data about the sample distribution for error analysis."""
-    # 1. Type-safe extraction for greedy vs sampling structures
+# def get_item_metadata(item):
+#     """Extracts analytical data about the sample distribution for error analysis."""
+#     # 1. Type-safe extraction for greedy vs sampling structures
+#     is_correct_list = item.get("is_correct", [])
+#     if not isinstance(is_correct_list, list):
+#         is_correct_list = [is_correct_list]
+        
+#     compare_label = item.get("compare_label", {})
+#     if not isinstance(compare_label, dict):
+#         compare_label = {}
+        
+#     pred_answer_list = item.get("pred_answer", [])
+#     if not isinstance(pred_answer_list, list):
+#         pred_answer_list = [pred_answer_list]
+        
+#     N = len(is_correct_list)
+
+#     if not is_correct_list or N == 0:
+#         return 0, 0, False, 0, False
+
+#     # 2. Map Clusters
+#     clusters = []
+#     visited = set()
+#     for i in range(N):
+#         if i not in visited:
+#             matches = compare_label.get(str(i), [])
+#             cluster_indices = [j for j, val in enumerate(matches) if val == 1]
+            
+#             # Failsafe lexical fallback for greedy runs or malformed matrices
+#             if not cluster_indices:
+#                 lexical_cluster = []
+#                 if pred_answer_list and i < len(pred_answer_list):
+#                     ans_i = str(pred_answer_list[i]).strip().lower()
+#                     for j in range(N):
+#                         if j < len(pred_answer_list):
+#                             if ans_i == str(pred_answer_list[j]).strip().lower():
+#                                 lexical_cluster.append(j)
+#                 cluster_indices = lexical_cluster if lexical_cluster else [i]
+
+#             clusters.append(cluster_indices)
+#             visited.update(cluster_indices)
+
+#     total_clusters = len(clusters)
+#     cluster_sizes = [len(c) for c in clusters]
+#     max_freq = max(cluster_sizes) if cluster_sizes else 0
+
+#     # 3. Analyze Correct Answers
+#     correct_freq = sum(1 for x in is_correct_list if x is True)
+#     correct_present = correct_freq > 0
+#     is_correct_most_freq = False
+
+#     if correct_present:
+#         # Find sizes of clusters containing correct answers
+#         correct_cluster_sizes = [len(c) for c in clusters if any(is_correct_list[idx] for idx in c)]
+#         if correct_cluster_sizes:
+#             is_correct_most_freq = max(correct_cluster_sizes) == max_freq
+
+#     return max_freq, total_clusters, correct_present, correct_freq, is_correct_most_freq
+
+
+
+def get_item_metadata(item, ignore_abstention_tokens=True):
+    """Extracts analytical data. Filters out explicit abstentions to track true hallucination frequency."""
     is_correct_list = item.get("is_correct", [])
-    if not isinstance(is_correct_list, list):
-        is_correct_list = [is_correct_list]
+    if not isinstance(is_correct_list, list): is_correct_list = [is_correct_list]
         
     compare_label = item.get("compare_label", {})
-    if not isinstance(compare_label, dict):
-        compare_label = {}
+    if not isinstance(compare_label, dict): compare_label = {}
         
     pred_answer_list = item.get("pred_answer", [])
-    if not isinstance(pred_answer_list, list):
-        pred_answer_list = [pred_answer_list]
+    if not isinstance(pred_answer_list, list): pred_answer_list = [pred_answer_list]
+    
+    pred_label_list = item.get("pred_label", [])
+    if not isinstance(pred_label_list, list): pred_label_list = [pred_label_list]
         
     N = len(is_correct_list)
+    if not is_correct_list or N == 0: return 0, 0, False, 0, False
 
-    if not is_correct_list or N == 0:
-        return 0, 0, False, 0, False
+    # 1. Filter out abstention tokens to find the true frequency of proposed answers
+    unans_phrases = ["i don't know", "insufficient", "cannot be answered", "not enough information"]
+    valid_indices = []
+    
+    for i in range(N):
+        if ignore_abstention_tokens:
+            lbl = pred_label_list[i] if pred_label_list and i < len(pred_label_list) else ""
+            ans = str(pred_answer_list[i]).lower() if pred_answer_list and i < len(pred_answer_list) else ""
+            is_unans = lbl in ["ABSTAIN", "DATA_UNCERTAIN", "MODEL_UNCERTAIN", "UNANSWERABLE"]
+            if any(p in ans for p in unans_phrases): is_unans = True
+            
+            # Skip adding to valid indices if it's an unanswerability token
+            if is_unans:
+                continue
+        valid_indices.append(i)
 
-    # 2. Map Clusters
+    # 2. Map Clusters ONLY for valid (proposed factual) answers
     clusters = []
     visited = set()
-    for i in range(N):
+    for i in valid_indices:
         if i not in visited:
             matches = compare_label.get(str(i), [])
-            cluster_indices = [j for j, val in enumerate(matches) if val == 1]
+            # Intersect matrix matches with our valid pool
+            cluster_indices = [j for j, val in enumerate(matches) if val == 1 and j in valid_indices]
             
-            # Failsafe lexical fallback for greedy runs or malformed matrices
+            # Failsafe lexical fallback
             if not cluster_indices:
                 lexical_cluster = []
                 if pred_answer_list and i < len(pred_answer_list):
                     ans_i = str(pred_answer_list[i]).strip().lower()
-                    for j in range(N):
+                    for j in valid_indices:
                         if j < len(pred_answer_list):
                             if ans_i == str(pred_answer_list[j]).strip().lower():
                                 lexical_cluster.append(j)
@@ -116,6 +191,8 @@ def get_item_metadata(item):
 
     total_clusters = len(clusters)
     cluster_sizes = [len(c) for c in clusters]
+    
+    # max_freq correctly drops to 0 if the model only generated "I don't know"
     max_freq = max(cluster_sizes) if cluster_sizes else 0
 
     # 3. Analyze Correct Answers
@@ -124,7 +201,6 @@ def get_item_metadata(item):
     is_correct_most_freq = False
 
     if correct_present:
-        # Find sizes of clusters containing correct answers
         correct_cluster_sizes = [len(c) for c in clusters if any(is_correct_list[idx] for idx in c)]
         if correct_cluster_sizes:
             is_correct_most_freq = max(correct_cluster_sizes) == max_freq
@@ -441,10 +517,10 @@ def process_run(data, method, threshold=None):
     
     # Strip zero-value bins from histograms
     res["error_analysis"]["answerable_max_freq_histogram"] = {
-        k: v for k, v in analysis["answerable_max_freq_histogram"].items() if v > 0
+        k: v for k, v in analysis["answerable_max_freq_histogram"].items() 
     }
     res["error_analysis"]["unanswerable_max_freq_histogram"] = {
-        k: v for k, v in analysis["unanswerable_max_freq_histogram"].items() if v > 0
+        k: v for k, v in analysis["unanswerable_max_freq_histogram"].items()
     }
 
     return calculate_metrics(res)

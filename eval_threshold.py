@@ -12,8 +12,8 @@ import concurrent.futures
 # ==========================================
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
-MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-# MODELS = ["result_qwen38", "result_qwen35", "result_qwen35_base", 'result_gemini36', 'result_gemini38']
+# MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
+MODELS = ["result_qwen38",]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -29,15 +29,15 @@ datasets = [
 
 
     # 'ReliableMath', 
-    'brokenmath', 
+    # 'brokenmath', 
     # 'brokenmath_combined', 
     # 'brokenmath_proof_answerable', 
     
-    'ReliableMath', 
+    # 'ReliableMath', 
     "brokenmath_type_answer_AU",
     "brokenmath_type_proof_AU"
-    "UA_commonsense",
-    "UA_math"
+    # "UA_commonsense",
+    # "UA_math"
 
 ]
 

@@ -13,7 +13,7 @@ import concurrent.futures
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
 MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
-MODELS = ["result_qwen38","result_qwen35", "result_qwen35_base"]
+MODELS = ["result_qwen38"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 # TARGET_METRIC = 'overall_accuracy' 
@@ -778,6 +778,7 @@ if __name__ == "__main__":
     # 2. Execute tasks concurrently
     # Uses min(32, cpu_count + 4) workers by default. Adjust max_workers if you have high core counts.
     print(f"Dispatching {len(tasks)} tasks to thread pool...")
+    print(tasks)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit all tasks to the executor
         futures = {executor.submit(process_combination, *task): task for task in tasks}

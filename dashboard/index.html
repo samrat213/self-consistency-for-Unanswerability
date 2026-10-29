@@ -175,7 +175,7 @@
             useEffect(() => {
                 if (!isAuthenticated) return;
 
-                fetch('results.json')
+                fetch('results.json', { cache: 'no-cache' })
                     .then(res => {
                         if (!res.ok) throw new Error("Could not load JSON file.");
                         return res.json();

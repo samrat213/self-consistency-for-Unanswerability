@@ -7,7 +7,7 @@ Run 2026-10-30. All tables: [`RESULTS_raw.md`](RESULTS_raw.md); numbers: `result
 
 | file | what |
 |---|---|
-| `data/<ds>_aware.json` | the 20-sample votes in the `experiments_CRP.py` item format + fixed dev/test split |
+| `data/<ds>_{aware,unaware}.json` | the 20-sample votes in the `experiments_CRP.py` item format + fixed dev/test split |
 | `experiments_vqa.py` | E1–E5 below (imports `../experiments_CRP.py`; numpy + scipy) |
 | `make_report.py` | `results_vqa.json` → `RESULTS_raw.md` + `plots/sequential.png` |
 | `export_crp_data.py` | how `data/` was made (needs the VQA codebase in `~/vqa-datasets`, reference only) |
@@ -56,6 +56,25 @@ bounds (α > −d instead of α ≥ 1e-4); with the old bounds it scored 80 / 36
   0.31 vs 0.38 (UNK-VQA). ZI_PYP is never better than Hurdle by more than noise. **The gains come from the IDK table,
   not from the CRP/PYP part.**
 - The oracle leaves a lot of room (+7 / +10 / +14), but that room is in questions it decides using the label.
+
+### E1 (unaware): same models, no abstain option in the prompt (test Overall F1, % of questions answered)
+
+These rows are also on the dashboard (`dashboard/results.json`, both settings, via `process_combination`).
+
+| method | UVQA | UNK-VQA | SpatialUncertain |
+|---|---|---|---|
+| self-consistency | 28 (100%) | 35 (72%) | 24 (100%) |
+| CRP_k | 51 (66%) | 43 (36%) | 50 (56%) |
+| TwoRest_CRP | 51 (66%) | 43 (36%) | 50 (56%) |
+| TwoRest_Reserved_CRP | 51 (66%) | 33 (9%) | 33 (0%) |
+| TwoRest_Hurdle_CRP | 34 (0%) | 34 (7%) | 34 (4%) |
+| TwoRest_ZI_PYP | 34 (0%) | 35 (19%) | 48 (60%) |
+| *Oracle_Intermediate* | *60* | *52–54* | *62* |
+
+Without the abstain option the model almost never says "I don't know" (unanswerable test questions with at
+least one IDK sample: 0 of 224 on UVQA, 40 of 450 on SpatialUncertain), so the IDK-rate models have nothing to fit and the dev-tuned threshold
+falls back to (almost) never answering. TwoRest_CRP equals CRP_k, as expected. Best unaware result is still the
+cluster-count threshold (CRP_k).
 
 ### E2: how many samples are needed? (sequential stopping, test, mean over 10 sample orders)
 

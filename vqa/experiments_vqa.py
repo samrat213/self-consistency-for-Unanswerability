@@ -106,6 +106,9 @@ def e1(ds, dev, test, work):
     out = {}
     for m in E1_METHODS:
         _, _, _, _, res = E.process_combination("result_qwen38", ds, "_abstaintion", val_q, test_q, [m])
+        for v in res.values():                      # 16-way grid cells -> flat keys "<method>__V_..__T_.."
+            if isinstance(v, dict) and "ablation_grid" in v:
+                out.update(v.pop("ablation_grid"))
         out.update(res)
     return out
 

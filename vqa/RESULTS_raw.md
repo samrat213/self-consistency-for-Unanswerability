@@ -16,7 +16,7 @@ Qwen3.8-27B, answerability-aware prompts, 20 samples/q. Test numbers unless mark
 | TwoRest_CRP | 47.0 | 25.0 | 77.0 | 28.6 | 53.0 | 41.0 | 12.0 | 82.0 | 20.9 | 40.0 | 57.0 | 41.0 | 74.0 | 39.2 | 56.0 |
 | TwoRest_Reserved_CRP | 79.0 | 78.0 | 80.0 | 54.9 | 77.0 | 41.0 | 18.0 | 70.0 | 34.1 | 43.0 | 57.0 | 41.0 | 74.0 | 39.2 | 56.0 |
 | TwoRest_Hurdle_CRP | 80.0 | 79.0 | 79.0 | 56.2 | 79.0 | 40.0 | 17.0 | 70.0 | 33.6 | 43.0 | 57.0 | 41.0 | 74.0 | 39.2 | 56.0 |
-| TwoRest_ZI_PYP | 80.0 | 79.0 | 79.0 | 56.2 | 79.0 | 36.0 | 4.0 | 90.0 | 10.3 | 38.0 | 59.0 | 54.0 | 64.0 | 55.7 | 58.0 |
+| TwoRest_ZI_PYP | 79.0 | 79.0 | 79.0 | 56.5 | 79.0 | 41.0 | 19.0 | 67.0 | 37.3 | 43.0 | 59.0 | 54.0 | 64.0 | 55.7 | 58.0 |
 | Oracle_Intermediate__keepIDK | 87.0 | 84.0 | 90.0 | 54.0 | 81.0 | 50.0 | 24.0 | 82.0 | 34.6 | 49.0 | 72.0 | 67.0 | 74.0 | 59.4 | 68.0 |
 | Oracle_Intermediate__dropIDK | 88.0 | 85.0 | 90.0 | 54.9 | 83.0 | 54.0 | 29.0 | 82.0 | 42.3 | 53.0 | 74.0 | 71.0 | 74.0 | 62.3 | 69.0 |
 
@@ -29,9 +29,9 @@ Grid (experiments_CRP RUN_ALL_16_ABLATION_COMBOS) best test cell per method, for
 Learned parameters (dev):
 
 - UVQA TwoRest_Hurdle_CRP: a_A=0.0641, b_A=2, a_U=0.125, b_U=0.0814, alpha_A=0.0795, alpha_U=0.0513, tau=-0.185
-- UVQA TwoRest_ZI_PYP: a_A=0.0641, b_A=2, a_U=0.125, b_U=0.0814, alpha_A=0.0794, d_A=0.0001, alpha_U=0.0512, d_U=0.0001, tau=-0.185
+- UVQA TwoRest_ZI_PYP: a_A=0.0641, b_A=2, a_U=0.125, b_U=0.0814, alpha_A=0.0794, d_A=0.0001, alpha_U=-0.0219, d_U=0.0734, tau=-0.192
 - UNK-VQA TwoRest_Hurdle_CRP: a_A=0.0997, b_A=0.104, a_U=0.165, b_U=0.156, alpha_A=0.287, alpha_U=0.247, tau=0.0318
-- UNK-VQA TwoRest_ZI_PYP: a_A=0.0997, b_A=0.104, a_U=0.165, b_U=0.156, alpha_A=0.0001, d_A=0.195, alpha_U=0.0001, d_U=0.185, tau=-0.215
+- UNK-VQA TwoRest_ZI_PYP: a_A=0.0997, b_A=0.104, a_U=0.165, b_U=0.156, alpha_A=-0.163, d_A=0.305, alpha_U=-0.259, d_U=0.377, tau=0.242
 - SpatialUncertain TwoRest_Hurdle_CRP: a_A=0.0703, b_A=1.03, a_U=0.157, b_U=0.428, alpha_A=0.107, alpha_U=0.131, tau=-0.404
 - SpatialUncertain TwoRest_ZI_PYP: a_A=0.0703, b_A=1.03, a_U=0.157, b_U=0.428, alpha_A=0.106, d_A=0.0001, alpha_U=0.125, d_U=0.00504, tau=-0.321
 

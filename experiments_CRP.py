@@ -480,7 +480,7 @@ def fit_pyp_mle(m_list, K_list, sizes_list):
     res = scipy.optimize.minimize(
         neg_ll,
         x0=[1.0, 0.15],
-        bounds=[(1e-4, 500.0), (1e-4, 0.999)],
+        bounds=[(-0.999, 500.0), (1e-4, 0.999)],  # alpha > -d is enforced inside neg_ll
         method='L-BFGS-B'
     )
     return float(res.x[0]), float(res.x[1])
@@ -809,7 +809,8 @@ def process_run(
             if is_pred_answerable:
                 res["matrix_gt_pred_counts"][gt]['Pred_ANSWERABLE'] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["count"] += 1
-                res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
+                if correct_present:
+                    res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_winning_freq"] += max_freq
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_total_clusters"] += total_clusters
             elif is_pred_unanswerable:
@@ -1042,7 +1043,7 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                             grid_dict = run_16_combination_grid(
                                 val_samples, test_samples, exp_name, internal_m, fixed_threshold=fixed_t
                             )
-                            local_result.update(grid_dict)
+                            local_result[exp_name]['ablation_grid'] = grid_dict
 
                 # --- New Two-Restaurant Bayesian Mixture Models ---
                 for tr_method in ['TwoRest_CRP', 'TwoRest_Reserved_CRP', 'TwoRest_Hurdle_CRP', 'TwoRest_ZI_PYP']:
@@ -1106,8 +1107,6 @@ if __name__ == "__main__":
                 if aware not in master_result[model][dataset]:
                     master_result[model][dataset][aware] = {}
                 for exp in REQUESTED_EXPERIMENTS:
-                    if exp not in master_result[model][dataset][aware]:
-                        master_result[model][dataset][aware][exp] = {}
                     tasks.append((model, dataset, aware, val_q, test_q, exp))
 
     print(f"Dispatching {len(tasks)} tasks to process pool...")
@@ -1118,7 +1117,7 @@ if __name__ == "__main__":
             try:
                 mod, ds, aw, exp, res_dict = future.result()
                 if res_dict:
-                    deep_update(master_result[mod][ds][aw][exp], res_dict)
+                    deep_update(master_result[mod][ds][aw], res_dict)
             except Exception as exc:
                 task_info = futures[future]
                 print(f"Task generated an exception for {task_info[:4]}: {exc}")

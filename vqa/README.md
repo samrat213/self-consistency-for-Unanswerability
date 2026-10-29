@@ -40,18 +40,21 @@ Reproduce: `python vqa/experiments_vqa.py && python vqa/make_report.py` (~10 min
 | TwoRest_CRP | 47 (answers 29%) | 41 | 57 |
 | TwoRest_Reserved_CRP | 79 | 41 | 57 |
 | **TwoRest_Hurdle_CRP** | **80** | 40 | 57 |
-| **TwoRest_ZI_PYP** | **80** | 36 (answers 10%) | **59** |
+| TwoRest_ZI_PYP | 79 | 41 | **59** |
 | *Oracle_Intermediate (upper bound)* | *87–88* | *50–54* | *72–74* |
 | best rule from our earlier VQA dashboard rows | 78.2 (AC 95%) | 42.7 (CRP_k) | 59.1 (Unans votes + CRP_k) |
 
-Whole numbers because `experiments_CRP.calculate_metrics` rounds to 2 decimals.
+Whole numbers because `experiments_CRP.calculate_metrics` rounds to 2 decimals. ZI_PYP uses the corrected fit
+bounds (α > −d instead of α ≥ 1e-4); with the old bounds it scored 80 / 36 (answering 10%) / 59.
 
-- **UVQA:** the IDK-aware two-restaurant models are the best method so far (+2 over our best rule, +4 over SC).
-- **UNK-VQA:** no gain. ZI_PYP's dev-tuned threshold nearly stops answering.
+- **UVQA:** the IDK-aware two-restaurant models (Hurdle 80, Reserved / ZI_PYP 79) are the best method so far
+  (+2 over our best rule, +4 over SC).
+- **UNK-VQA:** no gain (40–41 vs CRP_k 42.7).
 - **SpatialUncertain:** ZI_PYP ties our best rule, and Hurdle is 2 points behind.
 - **TwoRest_CRP (cluster count only) is never better than CRP_k** and collapses on UVQA, as the theory predicts.
-- **The fitted discount is ≈ 0** on UVQA and SpatialUncertain (d ≤ 0.005), so ZI_PYP ≈ Hurdle there. On UNK-VQA,
-  d_A ≈ d_U (0.195 vs 0.185). **The gains come from the IDK table, not from the CRP/PYP part.**
+- **The fitted discounts are small or similar:** d_A ≈ 0 vs d_U = 0.07 (UVQA), ≤ 0.005 for both (SpatialUncertain),
+  0.31 vs 0.38 (UNK-VQA). ZI_PYP is never better than Hurdle by more than noise. **The gains come from the IDK table,
+  not from the CRP/PYP part.**
 - The oracle leaves a lot of room (+7 / +10 / +14), but that room is in questions it decides using the label.
 
 ### E2: how many samples are needed? (sequential stopping, test, mean over 10 sample orders)

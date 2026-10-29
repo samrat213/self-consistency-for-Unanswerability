@@ -190,9 +190,20 @@
                                     
                                     if (!methods || Object.keys(methods).length === 0) continue;
                                     
+                                    // Entries written by experiments_CRP.py before the 2026-10-30 fix keep their metrics one
+                                    // level down ({method: {method: {...}}} or Oracle's {..._keepIDK, ..._dropIDK}): show those
+                                    // children as rows. Ablation-grid cells and val_set stay in the raw JSON only.
+                                    const entries = [];
                                     for (const [method, details] of Object.entries(methods)) {
                                         if (!details || Object.keys(details).length === 0) continue;
-                                        
+                                        if (details.metrics) { entries.push([method, details]); continue; }
+                                        for (const [sub, subDetails] of Object.entries(details)) {
+                                            if (subDetails && subDetails.metrics && sub !== 'val_set' && sub !== 'ablation_grid' && !sub.includes('__V_'))
+                                                entries.push([sub, subDetails]);
+                                        }
+                                    }
+
+                                    for (const [method, details] of entries) {
                                         const metrics = details.metrics || {};
                                         const ans = metrics.answerable || {};
                                         const unans = metrics.unanswerable || {};

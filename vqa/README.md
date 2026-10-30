@@ -1,7 +1,8 @@
 # CRP-family experiments on VQA unanswerability
 
 Qwen3.8-27B, **answerability-aware** prompts (the abstain option is offered), 20 temperature samples per question.
-Datasets: UVQA (dev 52 / test 448), UNK-VQA (200 / 900), SpatialUncertain (200 / 900), all 50% answerable.
+Datasets: UVQA (dev 52 / test 448), UNK-VQA (200 / 900), SpatialUncertain (200 / 900), HaloQuest (200 / 900, E7),
+all 50% answerable.
 Everything is tuned on dev (Overall F1 = mean of answerable-F1 and unanswerable-F1) and reported once on test.
 Run 2026-10-30. All tables: [`RESULTS_raw.md`](RESULTS_raw.md); numbers: `results_vqa.json`.
 
@@ -128,6 +129,32 @@ Two notebook issues:
   (cell 3 is correct).
 - `train()` averages α under a different prior per class (N(5,2) vs N(2,1)), which creates part of the fitted gap
   (UVQA raw gap −0.03 → fitted 0.90 vs 0.81).
+
+### E7: HaloQuest (test Overall F1; dev in brackets)
+
+HaloQuest (Wang et al., ECCV 2024): free-form questions on real (Open Images) and generated images. Answerable =
+"visual challenge"; unanswerable = "false premise" + "insufficient context". 1100 questions (550 / 550), stratified
+by hallucination type × image type, split by image (dev 200, test 900; no image in both). 255 real photos are no
+longer downloadable, so their questions were dropped. Same prompts as UNK-VQA. The judge (Qwen3.8-27B) sees all
+reference answers, and counts a reply that rejects the premise (e.g. "0" for "how many basketballs" when there are
+none) as abstaining.
+
+| method | aware | unaware |
+|---|---|---|
+| Greedy | **75** (73) | 68 (70) |
+| self consistency / Majority | 74 (74) | 69 / 71 (72 / 74) |
+| Unans votes + T | 74 (75) | 74 (74) |
+| CRP_k | 74 (75) | 71 (75) |
+| TwoRest_CRP | 48 (46) | 71 (75) |
+| TwoRest_Reserved_CRP | 74 (76) | 74 (75) |
+| TwoRest_Hurdle_CRP | 73 (75) | 70 (71) |
+| TwoRest_ZI_PYP | 74 (77) | **75** (75) |
+| Oracle_Intermediate (keep / drop IDK) | 79 / 81 | 78 / 79 |
+
+- Aware: nothing beats greedy (75); the vote-based ceiling (oracle) is only ~5 F1 above it. Unans-vote AUROC is 0.89,
+  but greedy already abstains on 84% of unanswerable questions, so there is little left to recover.
+- Unaware: the model often rejects false premises on its own, so the IDK-count models gain ~6 F1 over greedy
+  (68 → 74–75) and almost reach the aware setting.
 
 ## Takeaways
 

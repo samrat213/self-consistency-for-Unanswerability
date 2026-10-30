@@ -1389,11 +1389,15 @@ if __name__ == "__main__":
     
     tasks = []
     for model in MODELS:
+        if model not in master_result:
+            master_result[model] = {}
         for dataset in datasets:
-            master_result[model][dataset] = {}
+            if dataset not in master_result[model]:
+                master_result[model][dataset] = {}
             val_q, test_q = dataset_splits[dataset]['val'], dataset_splits[dataset]['test']
-            master_result[model][dataset][aware] = {}
             for aware in awareness:
+                if aware not in master_result[model][dataset]:
+                    master_result[model][dataset][aware] = {}
                 master_result[model][dataset][aware] = {}
                 for exp in REQUESTED_EXPERIMENTS:
                     tasks.append((model, dataset, aware, val_q, test_q, [exp]))

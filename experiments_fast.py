@@ -1,6 +1,5 @@
 import os
 import json
-import itertools
 from tqdm import tqdm
 import numpy as np
 import scipy.special
@@ -12,7 +11,8 @@ import concurrent.futures
 # ==========================================
 BASE_DIRECTORY = "/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/"
 DATA_DIRECTORY = os.path.join(BASE_DIRECTORY, "data") 
-MODELS = ["result_qwen38"]
+MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', 'result_gemini38', "result_qwen35", "result_qwen35_base",]
+# MODELS = ["result_qwen38"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
 TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy', 'overall_f1', 'ans_f1'
@@ -20,39 +20,72 @@ TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy'
 datasets = [
     'ReliableMath', 
     "brokenmath_type_answer_AU",
-    # "brokenmath_type_proof_AU",
+    "brokenmath_type_proof_AU",
+    "UA_commonsense",
+    "UA_math"
 ]
 
+# Ordered strictly by model complexity (from 0-param heuristics to full 8-param TwoRest_ZI_PYP and Oracle)
+ORDERED_EXPERIMENTS = [
+    (1,  'Greedy'),
+    (2,  'self_Consistency'),
+    (3,  'Majority'),
+    (4,  'self_Consistency_T'),
+    (5,  'scUn'),
+    (6,  'CRP_k'),
+    (7,  'CRP_theta'),
+    (8,  'Adaptive_Consistency_beta'),
+    (9,  'SingleRest_PYP_NoIDK'),
+    (10, 'SingleRest_Binomial_ZI_PYP_Surprisal'),
+    (11, 'SingleRest_Binomial_ZI_PYP_Predictive'),
+    (12, 'SingleRest_ZI_PYP_Surprisal'),
+    (13, 'SingleRest_ZI_PYP_Predictive'),
+    (14, 'TwoRest_CRP'),
+    (15, 'TwoRest_PYP_NoIDK'),
+    (16, 'TwoRest_Reserved_CRP'),
+    (17, 'TwoRest_Binomial_Hurdle_CRP'),
+    (18, 'TwoRest_Hurdle_CRP'),
+    (19, 'TwoRest_Binomial_ZI_PYP'),
+    (20, 'TwoRest_ConstrainedBB_ZI_PYP'),
+    (21, 'TwoRest_ZI_PYP'),
+    (22, 'Oracle_Intermediate'),
+]
 REQUESTED_EXPERIMENTS = [
-    'Greedy', 
-    'Majority', 
-    'self Consistency', 
-    'self Consistency + T', 
-    'scUn',
-    'CRP_k',
-    'CRP_theta',
-    'Adaptive_Consistency_beta',
-    # --- Low-Parameter 1-Param Gate Models (Binomial pi & Constrained b = 1 - a) ---
-    'TwoRest_Binomial_Hurdle_CRP',
-    'TwoRest_Binomial_ZI_PYP',
-    'TwoRest_ConstrainedBB_ZI_PYP',
-    'SingleRest_Binomial_ZI_PYP_Surprisal',
-    'SingleRest_Binomial_ZI_PYP_Predictive',
-    # --- 2-Param Gate & Reserved-Atom Models ---
-    'TwoRest_CRP',
-    'TwoRest_Reserved_CRP',
-    'TwoRest_Hurdle_CRP',
-    'TwoRest_ZI_PYP',
-    'SingleRest_ZI_PYP_Surprisal',
-    'SingleRest_ZI_PYP_Predictive',
-    # --- PYP Without IDK Table (Keep vs Drop IDK in Train & Test) ---
-    # 'SingleRest_PYP_NoIDK',
-    # 'TwoRest_PYP_NoIDK',
-    # --- Theoretical Upper Bound Oracle ---
-    'Oracle_Intermediate'
+'Greedy'
+'self_Consistency'
+'Majority'
+'self_Consistency_T'
+'scUn'
+'CRP_k'
+'CRP_theta'
+'Adaptive_Consistency_beta'
+'SingleRest_PYP_NoIDK'
+'SingleRest_Binomial_ZI_PYP_Surprisal'
+'SingleRest_Binomial_ZI_PYP_Predictive'
+'SingleRest_ZI_PYP_Surprisal'
+'SingleRest_ZI_PYP_Predictive'
+'TwoRest_CRP'
+'TwoRest_PYP_NoIDK'
+'TwoRest_Reserved_CRP'
+'TwoRest_Binomial_Hurdle_CRP'
+'TwoRest_Hurdle_CRP'
+'TwoRest_Binomial_ZI_PYP'
+'TwoRest_ConstrainedBB_ZI_PYP'
+'TwoRest_ZI_PYP'
+'Oracle_Intermediate'
+]
+REQUESTED_EXPERIMENTS = [name for _, name in ORDERED_EXPERIMENTS]
+
+# The 3 requested combinations for existing threshold methods:
+# 1. Consider IDK (fraction out of N=20)
+# 2. Don't consider IDK, fraction out of N=20
+# 3. Don't consider IDK, fraction out of m = N - n_0
+THREE_ABLATION_COMBOS = [
+    ("1_keepIDK_outOf20", False, 'N'),
+    ("2_dropIDK_outOf20", True,  'N'),
+    ("3_dropIDK_outOfM",  True,  'm'),
 ]
 
-RUN_ALL_16_ABLATION_COMBOS = False
 awareness = ['_abstaintion', '']
 
 UNANS_PHRASES = ["i don't know", "insufficient", "cannot be answered", "not enough information"]
@@ -143,7 +176,6 @@ def _compute_clusters_raw(item, ignore_idk=False, up_to_k=None):
     return N_total, n_0, m, clusters, is_correct_list, pred_label_list
 
 
-# Pre-compute MLE theta lookup table for N, K in [0..50] -> O(1) instant lookup!
 _MLE_THETA_CACHE = {}
 def get_mle_theta(denom_size, K):
     key = (int(denom_size), int(K))
@@ -167,10 +199,7 @@ def get_mle_theta(denom_size, K):
 
 
 def precompute_dataset_caches(data):
-    """
-    Runs ONCE per dataset split. Caches clusters, metadata, and sequential Beta trajectories
-    on every item so process_run and threshold sweeps are 100x+ faster.
-    """
+    """Caches clusters, metadata, and sequential Beta trajectories once per dataset split."""
     for item in data:
         if "_fast_cache" in item:
             continue
@@ -189,7 +218,6 @@ def precompute_dataset_caches(data):
                 if correct_cluster_sizes:
                     is_correct_most_freq = (max(correct_cluster_sizes) == max_freq)
 
-            # Precompute sequential steps for Adaptive_Consistency_beta
             seq_steps = []
             for k in range(1, N + 1):
                 _, n_0_k, _, cl_k, _, _ = _compute_clusters_raw(item, ignore_idk=ign, up_to_k=k)
@@ -482,9 +510,6 @@ def fit_reserved_crp_mle(N_list, n0_list, K_list):
 
 
 def fit_pyp_mle(m_list, K_list, sizes_list):
-    """
-    Fully vectorized Pitman-Yor MLE using pre-aggregated count arrays (50x faster than Python loop).
-    """
     valid = [
         (m, K, sizes)
         for m, K, sizes in zip(m_list, K_list, sizes_list)
@@ -497,7 +522,6 @@ def fit_pyp_mle(m_list, K_list, sizes_list):
     K_arr = np.array([x[1] for x in valid], dtype=int)
     max_K = int(np.max(K_arr))
     j_vals = np.arange(1, max_K, dtype=float)
-    # j_counts[idx] = how many items have K > j_vals[idx]
     j_counts = np.array([np.sum(K_arr > j) for j in range(1, max_K)], dtype=float) if max_K > 1 else np.array([])
 
     all_gt1 = [s for _, _, sizes in valid for s in sizes if s > 1]
@@ -543,7 +567,7 @@ def pyp_log_likelihood_single_partition(m_eff, K, sizes, alpha, d):
 
 def compute_generative_score(item, params):
     method = params['method']
-    test_ignore_idk = params.get('test_ignore_idk', method not in ['TwoRest_CRP'])
+    test_ignore_idk = params.get('test_ignore_idk', True)
 
     N, n_0, m, clusters, _, _ = extract_clusters(item, ignore_idk=test_ignore_idk)
     if N == 0:
@@ -602,9 +626,11 @@ def compute_generative_score(item, params):
         return float(p_idk_next + (1.0 - p_idk_next) * (p_new_table - p_stay_dom))
 
     elif method == 'TwoRest_CRP':
+        if m_eff == 0 or K == 0:
+            return 1e6
         aU, aA = params['alpha_U'], params['alpha_A']
-        ll_U = K * np.log(aU) + scipy.special.gammaln(aU) - scipy.special.gammaln(N + aU)
-        ll_A = K * np.log(aA) + scipy.special.gammaln(aA) - scipy.special.gammaln(N + aA)
+        ll_U = K * np.log(aU) + scipy.special.gammaln(aU) - scipy.special.gammaln(m_eff + aU)
+        ll_A = K * np.log(aA) + scipy.special.gammaln(aA) - scipy.special.gammaln(m_eff + aA)
         return float(ll_U - ll_A)
 
     elif method == 'TwoRest_Reserved_CRP':
@@ -681,10 +707,6 @@ def compute_generative_score(item, params):
 
 
 def fast_vectorized_tau_search(val_data, val_scores, candidate_taus, test_ignore_idk=True):
-    """
-    Evaluates ALL candidate_taus simultaneously in < 0.2ms using 2D NumPy broadcasting,
-    producing the EXACT same metric (including round(..., 2)) as calling process_run in a loop.
-    """
     n_items = len(val_data)
     if n_items == 0 or not candidate_taus:
         return 0.0
@@ -706,11 +728,10 @@ def fast_vectorized_tau_search(val_data, val_scores, candidate_taus, test_ignore
             base_pred_unans[idx] = (lbl in UNANS_LABELS)
             base_corr[idx] = bool(is_corr[best_i])
 
-    scores_col = np.asarray(val_scores, dtype=float)[:, None]   # Shape: (M, 1)
-    taus_row = np.asarray(candidate_taus, dtype=float)[None, :]  # Shape: (1, T)
+    scores_col = np.asarray(val_scores, dtype=float)[:, None]
+    taus_row = np.asarray(candidate_taus, dtype=float)[None, :]
 
-    # Whenever score > tau, prediction is overridden to "DATA_UNCERTAIN" (Unanswerable)
-    abstain_override = (scores_col > taus_row)  # Shape: (M, T)
+    abstain_override = (scores_col > taus_row)
 
     is_pred_ans = (~abstain_override) & base_pred_ans[:, None]
     is_pred_unans = abstain_override | base_pred_unans[:, None]
@@ -770,26 +791,27 @@ IDK_TABLE_GENERATIVE_METHODS = {
     'TwoRest_Binomial_ZI_PYP',
     'TwoRest_ConstrainedBB_ZI_PYP',
     'SingleRest_Binomial_ZI_PYP_Surprisal',
-    # 'SingleRest_Binomial_ZI_PYP_Predictive',
-    'TwoRest_CRP',
+    'SingleRest_Binomial_ZI_PYP_Predictive',
     'TwoRest_Reserved_CRP',
     'TwoRest_Hurdle_CRP',
     'TwoRest_ZI_PYP',
     'SingleRest_ZI_PYP_Surprisal',
-    # 'SingleRest_ZI_PYP_Predictive',
+    'SingleRest_ZI_PYP_Predictive',
 }
 
-GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}
-GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}
+NO_IDK_TABLE_GENERATIVE_METHODS = {
+    'SingleRest_PYP_NoIDK',
+    'TwoRest_CRP',
+    'TwoRest_PYP_NoIDK',
+}
+
+GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | NO_IDK_TABLE_GENERATIVE_METHODS
 
 
 def train_generative_restaurant_model(
     val_data, method='TwoRest_Binomial_ZI_PYP', val_ignore_idk=True, test_ignore_idk=True
 ):
-    if method == 'TwoRest_CRP':
-        val_ignore_idk = False
-        test_ignore_idk = False
-    elif method in IDK_TABLE_GENERATIVE_METHODS:
+    if method in IDK_TABLE_GENERATIVE_METHODS:
         val_ignore_idk = True
         test_ignore_idk = True
 
@@ -845,8 +867,8 @@ def train_generative_restaurant_model(
         })
 
     elif method == 'TwoRest_CRP':
-        params['alpha_A'] = round(fit_crp_alpha_mle([s[0] for s in ans_stats], [s[3] for s in ans_stats]), 4)
-        params['alpha_U'] = round(fit_crp_alpha_mle([s[0] for s in unans_stats], [s[3] for s in unans_stats]), 4)
+        params['alpha_A'] = round(fit_crp_alpha_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats]), 4)
+        params['alpha_U'] = round(fit_crp_alpha_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats]), 4)
 
     elif method == 'TwoRest_Reserved_CRP':
         aA, bA = fit_reserved_crp_mle([s[0] for s in ans_stats], [s[1] for s in ans_stats], [s[3] for s in ans_stats])
@@ -893,7 +915,6 @@ def train_generative_restaurant_model(
         al0, d0 = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
         params.update({'alpha_0': round(al0, 4), 'd_0': round(d0, 4)})
 
-    # Compute validation scores ONCE and evaluate all candidate thresholds at once via NumPy!
     val_eval_params = dict(params, test_ignore_idk=val_ignore_idk)
     val_scores = [compute_generative_score(item, val_eval_params) for item in val_data]
     finite_scores = [s for s in val_scores if np.isfinite(s) and abs(s) < 1e5]
@@ -1117,7 +1138,7 @@ def process_run(
 
 
 # ==========================================
-# 5. FAST THRESHOLD & ABLATION GRID OPTIMIZATION
+# 5. FAST THRESHOLD & 3-COMBO ABLATION RUNNER
 # ==========================================
 def extract_target_score(res):
     if TARGET_METRIC == 'overall_accuracy': return res["metrics"]["overall_accuracy"]
@@ -1141,7 +1162,6 @@ def learn_best_threshold(val_data, method, val_ignore_idk=True, val_denom='N'):
     else:
         return None
 
-    # Use vectorized tau search for instant evaluation when applicable
     if method in ['crp_k', 'crp_theta']:
         val_scores = []
         for item in val_data:
@@ -1156,10 +1176,9 @@ def learn_best_threshold(val_data, method, val_ignore_idk=True, val_denom='N'):
                 val_scores.append(get_mle_theta(denom, len(clusters)))
         return fast_vectorized_tau_search(val_data, val_scores, test_thresholds, test_ignore_idk=val_ignore_idk)
 
-    # For majority, adapted_sc, and Adaptive_Consistency_beta, cached lookups make this loop < 2ms
     best_threshold = test_thresholds[0]
     best_score = -1.0
-    for t in tqdm(test_thresholds, desc = method):
+    for t in test_thresholds:
         res = process_run(
             val_data, method=method, threshold=t,
             ignore_abstention_tokens=val_ignore_idk, denom_mode=val_denom
@@ -1172,43 +1191,40 @@ def learn_best_threshold(val_data, method, val_ignore_idk=True, val_denom='N'):
     return best_threshold
 
 
-def run_16_combination_grid(val_samples, test_samples, base_exp_name, internal_method, fixed_threshold=None):
-    grid_results = {}
-    learned_thresholds = {}
-    for val_idk, val_den in itertools.product([False, True], ['N', 'm']):
-        if fixed_threshold is not None:
-            learned_thresholds[(val_idk, val_den)] = fixed_threshold
-        else:
-            learned_thresholds[(val_idk, val_den)] = learn_best_threshold(
-                val_samples, internal_method, val_ignore_idk=val_idk, val_denom=val_den
-            )
+def run_3_ablation_combos(val_samples, test_samples, numbered_prefix, internal_method, fixed_threshold=None, skip_keep_idk=False):
+    """
+    Runs the exact 3 requested configurations (applied consistently to val and test):
+      1. Consider IDK (ignore_idk=False, denom='N')
+      2. Don't consider IDK, fraction out of 20 (ignore_idk=True, denom='N')
+      3. Don't consider IDK, fraction out of m (ignore_idk=True, denom='m')
+    """
+    combo_results = {}
+    for combo_tag, ignore_idk, denom_mode in THREE_ABLATION_COMBOS:
+        if skip_keep_idk and not ignore_idk:
+            continue
 
-    for (val_idk, val_den), (test_idk, test_den) in itertools.product(
-        itertools.product([False, True], ['N', 'm']),
-        itertools.product([False, True], ['N', 'm'])
-    ):
-        opt_t = learned_thresholds[(val_idk, val_den)]
-        v_tag = f"V_{'dropIDK' if val_idk else 'keepIDK'}_{val_den}"
-        t_tag = f"T_{'dropIDK' if test_idk else 'keepIDK'}_{test_den}"
-        combo_key = f"{base_exp_name}__{v_tag}__{t_tag}"
+        opt_t = fixed_threshold if fixed_threshold is not None else learn_best_threshold(
+            val_samples, internal_method, val_ignore_idk=ignore_idk, val_denom=denom_mode
+        )
+        key = f"{numbered_prefix}__{combo_tag}"
 
         test_res = process_run(
             test_samples, method=internal_method, threshold=opt_t,
-            ignore_abstention_tokens=test_idk, denom_mode=test_den
+            ignore_abstention_tokens=ignore_idk, denom_mode=denom_mode
         )
         val_res = process_run(
             val_samples, method=internal_method, threshold=opt_t,
-            ignore_abstention_tokens=val_idk, denom_mode=val_den
+            ignore_abstention_tokens=ignore_idk, denom_mode=denom_mode
         )
         test_res['val_set'] = val_res
         test_res['learned_threshold'] = round(opt_t, 4) if isinstance(opt_t, float) else opt_t
         test_res['ablation_config'] = {
-            'val_ignore_idk': val_idk, 'val_denom': val_den,
-            'test_ignore_idk': test_idk, 'test_denom': test_den
+            'ignore_idk': ignore_idk,
+            'denom_mode': denom_mode
         }
-        grid_results[combo_key] = test_res
+        combo_results[key] = test_res
 
-    return grid_results
+    return combo_results
 
 
 # ==========================================
@@ -1266,134 +1282,106 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
     
     local_result = {}
     
-    if 'Greedy' in req_exps:
-        greedy_all_data = load_data(greedy_file)
-        if greedy_all_data:
-            greedy_val_data, greedy_test_data = split_output_data(greedy_all_data, val_q, test_q)
-            if greedy_test_data:
-                precompute_dataset_caches(greedy_val_data)
-                precompute_dataset_caches(greedy_test_data)
-                local_result['Greedy'] = process_run(greedy_test_data, method='greedy')
-                local_result['Greedy']['val_set'] = process_run(greedy_val_data, method='greedy')
-            
-    sampling_reqs = [e for e in req_exps if e != 'Greedy']
-    if sampling_reqs:
-        samples_all_data = load_data(samples_file)
-        if samples_all_data:
-            val_samples, test_samples = split_output_data(samples_all_data, val_q, test_q)
-            
-            if val_samples and test_samples:
-                # Pre-compute clusters & sequential beta steps ONCE for val and test splits!
-                precompute_dataset_caches(val_samples)
-                precompute_dataset_caches(test_samples)
+    # Preload greedy and sampling splits once
+    greedy_all_data = load_data(greedy_file) if 'Greedy' in req_exps else []
+    samples_all_data = load_data(samples_file) if any(e != 'Greedy' for e in req_exps) else []
 
-                # 1. Unthresholded Self-Consistency
-                if 'self Consistency' in req_exps:
-                    for test_idk in [False, True]:
-                        tag = "dropIDK" if test_idk else "keepIDK"
-                        key = 'self Consistency' if not test_idk else f'self Consistency__T_{tag}'
-                        local_result[key] = process_run(
-                            test_samples, method='most_freq', ignore_abstention_tokens=test_idk
-                        )
-                        local_result[key]['val_set'] = process_run(
-                            val_samples, method='most_freq', ignore_abstention_tokens=test_idk
-                        )
+    greedy_val, greedy_test = split_output_data(greedy_all_data, val_q, test_q) if greedy_all_data else ([], [])
+    val_samples, test_samples = split_output_data(samples_all_data, val_q, test_q) if samples_all_data else ([], [])
 
-                # 2. Existing Thresholded Baselines + 16-Combination Grid
-                method_map = [
-                    ('self Consistency + T', 'majority', None),
-                    ('Majority', 'majority', 0.5),
-                    ('scUn', 'adapted_sc', None),
-                    ('CRP_k', 'crp_k', None),
-                    ('CRP_theta', 'crp_theta', None),
-                    ('Adaptive_Consistency_beta', 'Adaptive_Consistency_beta', None),
-                ]
-                for exp_name, internal_m, fixed_t in method_map:
-                    if exp_name in req_exps:
-                        opt_t = fixed_t if fixed_t is not None else learn_best_threshold(
-                            val_samples, internal_m, val_ignore_idk=True, val_denom='N'
-                        )
-                        default_test_idk = (internal_m == 'adapted_sc')
-                        local_result[exp_name] = process_run(
-                            test_samples, method=internal_m, threshold=opt_t,
-                            ignore_abstention_tokens=default_test_idk, denom_mode='N'
-                        )
-                        local_result[exp_name]['val_set'] = process_run(
-                            val_samples, method=internal_m, threshold=opt_t,
-                            ignore_abstention_tokens=True, denom_mode='N'
-                        )
-                        local_result[exp_name]['learned_threshold'] = round(opt_t, 4) if isinstance(opt_t, float) else opt_t
+    if greedy_val and greedy_test:
+        precompute_dataset_caches(greedy_val)
+        precompute_dataset_caches(greedy_test)
+    if val_samples and test_samples:
+        precompute_dataset_caches(val_samples)
+        precompute_dataset_caches(test_samples)
 
-                        if RUN_ALL_16_ABLATION_COMBOS:
-                            grid_dict = run_16_combination_grid(
-                                val_samples, test_samples, exp_name, internal_m, fixed_threshold=fixed_t
-                            )
-                            local_result.update(grid_dict)
+    # Iterate strictly in complexity order (01_Greedy -> 22_Oracle_Intermediate)
+    for idx, exp_name in ORDERED_EXPERIMENTS:
+        if exp_name not in req_exps:
+            continue
+        prefix = f"{idx:02d}_{exp_name}"
 
-                # 3. Generative Models WITH Dedicated IDK Table
-                for gm in IDK_TABLE_GENERATIVE_METHODS:
-                    if gm in req_exps:
-                        learned_params = train_generative_restaurant_model(val_samples, method=gm)
-                        local_result[gm] = process_run(
-                            test_samples, method=gm, threshold=learned_params, ignore_abstention_tokens=True
-                        )
-                        local_result[gm]['val_set'] = process_run(
-                            val_samples, method=gm, threshold=learned_params, ignore_abstention_tokens=True
-                        )
-                        local_result[gm]['learned_params'] = learned_params
+        # 01. Greedy
+        if exp_name == 'Greedy':
+            if greedy_test:
+                local_result[prefix] = process_run(greedy_test, method='greedy')
+                local_result[prefix]['val_set'] = process_run(greedy_val, method='greedy')
+            continue
 
-                # 4. PYP WITHOUT IDK Table (Single & Two-Restaurant across Keep vs Drop IDK)
-                for no_idk_method in ['SingleRest_PYP_NoIDK', 'TwoRest_PYP_NoIDK']:
-                    if no_idk_method in req_exps:
-                        for val_idk, test_idk in itertools.product([False, True], [False, True]):
-                            v_tag = "V_dropIDK" if val_idk else "V_keepIDK"
-                            t_tag = "T_dropIDK" if test_idk else "T_keepIDK"
-                            exp_key = f"{no_idk_method}__{v_tag}__{t_tag}"
+        if not (val_samples and test_samples):
+            continue
 
-                            learned_params = train_generative_restaurant_model(
-                                val_samples, method=no_idk_method,
-                                val_ignore_idk=val_idk, test_ignore_idk=test_idk
-                            )
-                            local_result[exp_key] = process_run(
-                                test_samples, method=no_idk_method, threshold=learned_params,
-                                ignore_abstention_tokens=test_idk
-                            )
-                            val_eval_params = dict(learned_params, test_ignore_idk=val_idk)
-                            local_result[exp_key]['val_set'] = process_run(
-                                val_samples, method=no_idk_method, threshold=val_eval_params,
-                                ignore_abstention_tokens=val_idk
-                            )
-                            local_result[exp_key]['learned_params'] = learned_params
+        # 02. Unthresholded Self-Consistency (keepIDK vs dropIDK)
+        if exp_name == 'self_Consistency':
+            for sub_idx, (tag, ign_idk) in enumerate([("1_keepIDK", False), ("2_dropIDK", True)], 1):
+                key = f"{prefix}__{tag}"
+                local_result[key] = process_run(test_samples, method='most_freq', ignore_abstention_tokens=ign_idk)
+                local_result[key]['val_set'] = process_run(val_samples, method='most_freq', ignore_abstention_tokens=ign_idk)
 
-                # 5. Theoretical Upper Bound Oracle (1 < K < N)
-                if 'Oracle_Intermediate' in req_exps:
-                    for ignore_idk in [False, True]:
-                        tag = "dropIDK" if ignore_idk else "keepIDK"
-                        oracle_key = f"Oracle_Intermediate__{tag}"
-                        local_result[oracle_key] = process_run(
-                            test_samples, method='Oracle_Intermediate', ignore_abstention_tokens=ignore_idk
-                        )
-                        local_result[oracle_key]['val_set'] = process_run(
-                            val_samples, method='Oracle_Intermediate', ignore_abstention_tokens=ignore_idk
-                        )
-                    
+        # 03 - 08. Existing Thresholded Baselines (3 Combos each)
+        elif exp_name in ['Majority', 'self_Consistency_T', 'scUn', 'CRP_k', 'CRP_theta', 'Adaptive_Consistency_beta']:
+            internal_map = {
+                'Majority': ('majority', 0.5, False),
+                'self_Consistency_T': ('majority', None, False),
+                'scUn': ('adapted_sc', None, True),  # scUn inherently drops IDK, so runs combos 2 & 3
+                'CRP_k': ('crp_k', None, False),
+                'CRP_theta': ('crp_theta', None, False),
+                'Adaptive_Consistency_beta': ('Adaptive_Consistency_beta', None, False),
+            }
+            internal_m, fixed_t, skip_keep = internal_map[exp_name]
+            combos_dict = run_3_ablation_combos(
+                val_samples, test_samples, prefix, internal_m,
+                fixed_threshold=fixed_t, skip_keep_idk=skip_keep
+            )
+            local_result.update(combos_dict)
+
+        # 09, 14, 15. Generative Models WITHOUT IDK Table (Combo 1: keepIDK vs Combo 2: dropIDK)
+        elif exp_name in NO_IDK_TABLE_GENERATIVE_METHODS:
+            for tag, ign_idk in [("1_keepIDK", False), ("2_dropIDK", True)]:
+                key = f"{prefix}__{tag}"
+                learned_params = train_generative_restaurant_model(
+                    val_samples, method=exp_name, val_ignore_idk=ign_idk, test_ignore_idk=ign_idk
+                )
+                local_result[key] = process_run(
+                    test_samples, method=exp_name, threshold=learned_params, ignore_abstention_tokens=ign_idk
+                )
+                local_result[key]['val_set'] = process_run(
+                    val_samples, method=exp_name, threshold=learned_params, ignore_abstention_tokens=ign_idk
+                )
+                local_result[key]['learned_params'] = learned_params
+
+        # 10 - 13, 16 - 21. Generative Models WITH Dedicated IDK Table 0
+        elif exp_name in IDK_TABLE_GENERATIVE_METHODS:
+            learned_params = train_generative_restaurant_model(val_samples, method=exp_name)
+            local_result[prefix] = process_run(
+                test_samples, method=exp_name, threshold=learned_params, ignore_abstention_tokens=True
+            )
+            local_result[prefix]['val_set'] = process_run(
+                val_samples, method=exp_name, threshold=learned_params, ignore_abstention_tokens=True
+            )
+            local_result[prefix]['learned_params'] = learned_params
+
+        # 22. Theoretical Upper Bound Oracle (1 < K < 20)
+        elif exp_name == 'Oracle_Intermediate':
+            for tag, ign_idk in [("1_keepIDK", False), ("2_dropIDK", True)]:
+                key = f"{prefix}__{tag}"
+                local_result[key] = process_run(
+                    test_samples, method='Oracle_Intermediate', ignore_abstention_tokens=ign_idk
+                )
+                local_result[key]['val_set'] = process_run(
+                    val_samples, method='Oracle_Intermediate', ignore_abstention_tokens=ign_idk
+                )
+
     return model, dataset, aware, local_result
 
 
 if __name__ == "__main__":
-    if os.path.exists(OUTPUT_FILE):
-        print(f"Loading existing results from {OUTPUT_FILE}...")
-        with open(OUTPUT_FILE, 'r') as f:
-            try:
-                master_result = json.load(f)
-            except json.JSONDecodeError:
-                print("Warning: Output file corrupted. Starting fresh.")
-                master_result = {model: {} for model in MODELS}
-    else:
-        master_result = {model: {} for model in MODELS}
+    # Start fresh or sort keys so old unnumbered keys don't clutter the JSON
+    master_result = {model: {} for model in MODELS}
 
     print(f"Running Models: {MODELS}")
-    print(f"Running Experiments: {REQUESTED_EXPERIMENTS}")
+    print(f"Running Experiments (in complexity order): {[f'{i:02d}_{n}' for i, n in ORDERED_EXPERIMENTS]}")
     dataset_splits = {
         ds: {'val': get_split_identifiers('val', ds), 'test': get_split_identifiers('test', ds)}
         for ds in datasets
@@ -1401,19 +1389,14 @@ if __name__ == "__main__":
     
     tasks = []
     for model in MODELS:
-        if model not in master_result:
-            master_result[model] = {}
         for dataset in datasets:
-            if dataset not in master_result[model]:
-                master_result[model][dataset] = {}
+            master_result[model][dataset] = {}
             val_q, test_q = dataset_splits[dataset]['val'], dataset_splits[dataset]['test']
+            master_result[model][dataset][aware] = {}
             for aware in awareness:
-                if aware not in master_result[model][dataset]:
-                    master_result[model][dataset][aware] = {}
                 master_result[model][dataset][aware] = {}
                 for exp in REQUESTED_EXPERIMENTS:
                     tasks.append((model, dataset, aware, val_q, test_q, [exp]))
-                # tasks.append((model, dataset, aware, val_q, test_q, REQUESTED_EXPERIMENTS))
 
     print(f"Dispatching {len(tasks)} tasks to process pool...")
     with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -1422,12 +1405,14 @@ if __name__ == "__main__":
             try:
                 mod, ds, aw, res_dict = future.result()
                 if res_dict:
-                    deep_update(master_result[mod][ds][aw], res_dict)
+                    # Preserve exact 01_ -> 22_ key ordering in the output dictionary
+                    ordered_dict = {k: res_dict[k] for k in sorted(res_dict.keys())}
+                    master_result[mod][ds][aw] = ordered_dict
             except Exception as exc:
                 task_info = futures[future]
                 print(f"Task generated an exception for {task_info[:3]}: {exc}")
                 
-    print(f"Writing updated results to {OUTPUT_FILE}...")
+    print(f"Writing ordered results to {OUTPUT_FILE}...")
     with open(OUTPUT_FILE, 'w') as f:
         json.dump(master_result, f, indent=2)
     print("Done!")

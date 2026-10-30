@@ -169,7 +169,6 @@
             const [filterDataset, setFilterDataset] = useState("All");
             const [filterAwareness, setFilterAwareness] = useState("All");
             const [filterMethods, setFilterMethods] = useState([]);
-            const [showAblations, setShowAblations] = useState(false);
             
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -197,6 +196,9 @@
                                     const entries = [];
                                     for (const [method, details] of Object.entries(methods)) {
                                         if (!details || Object.keys(details).length === 0) continue;
+                                        // keep/drop-IDK ablations for validation (V_) and test (T_) stay in the raw JSON only;
+                                        // the keep/keep variant is the method itself and is shown under its plain name
+                                        if (method.includes('__V_') && !method.endsWith('__V_keepIDK__T_keepIDK')) continue;
                                         if (details.metrics) { entries.push([method, details]); continue; }
                                         for (const [sub, subDetails] of Object.entries(details)) {
                                             if (subDetails && subDetails.metrics && sub !== 'val_set' && sub !== 'ablation_grid' && !sub.includes('__V_'))
@@ -222,7 +224,7 @@
                                             n_ans: details.ans_count,
                                             n_unans: details.unans_count,
                                             Awareness: mode_str,
-                                            Method: method.replace(/^_/, ''),
+                                            Method: method.replace(/^_/, '').replace('__V_keepIDK__T_keepIDK', ''),
                                             Overall_Acc: metrics.overall_accuracy,
                                             Overall_f1: metrics.overall_f1,
                                             Ans_accuracy: ans.accuracy,
@@ -256,20 +258,16 @@
             const uniqueModels = useMemo(() => [...new Set(data.map(d => d.Model))], [data]);
             const uniqueDatasets = useMemo(() => [...new Set(data.map(d => d.Dataset))], [data]);
             const uniqueAwareness = useMemo(() => [...new Set(data.map(d => d.Awareness))], [data]);
-            // Ablation rows: keep/drop-IDK combinations for validation (V_) and test (T_). Only the keep/keep
-            // variant of a method is a method in its own right; the others are hidden unless asked for.
-            const isAblation = (m) => m.includes("__V_") && !m.endsWith("__V_keepIDK__T_keepIDK");
-            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.Method))].filter(m => showAblations || !isAblation(m)), [data, showAblations]);
+            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.Method))], [data]);
 
             const filteredData = useMemo(() => {
                 return data.filter(row => {
                     return (filterModel === "All" || row.Model === filterModel) &&
                            (filterDataset === "All" || row.Dataset === filterDataset) &&
                            (filterAwareness === "All" || row.Awareness === filterAwareness) &&
-                           (filterMethods.length === 0 || filterMethods.includes(row.Method)) &&
-                           (showAblations || !isAblation(row.Method) || filterMethods.includes(row.Method));
+                           (filterMethods.length === 0 || filterMethods.includes(row.Method));
                 });
-            }, [data, filterModel, filterDataset, filterAwareness, filterMethods, showAblations]);
+            }, [data, filterModel, filterDataset, filterAwareness, filterMethods]);
 
             const sortedData = useMemo(() => {
                 let sortableItems = [...filteredData];
@@ -371,10 +369,6 @@
                         <div>
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Method</label>
                             <MultiSelect options={uniqueMethods} selected={filterMethods} onChange={setFilterMethods} allLabel="All Methods" />
-                            <label className="flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer">
-                                <input type="checkbox" checked={showAblations} onChange={(e) => setShowAblations(e.target.checked)} />
-                                Show ablation rows (V_/T_ keep/drop-IDK variants)
-                            </label>
                         </div>
                     </div>
 

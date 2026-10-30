@@ -392,15 +392,6 @@
                                         <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Method')}>
                                             Method <span className="text-gray-400 text-[10px]">{getSortIndicator('Method')}</span>
                                         </th>
-                                        <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Overall_Acc')}>
-                                            Overall Acc <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_Acc')}</span>
-                                        </th>
-                                        <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Ans_accuracy')}>
-                                            Ans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Ans_accuracy')}</span>
-                                        </th>
-                                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Unans_accuracy')}>
-                                            Unans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Unans_accuracy')}</span>
-                                        </th>
                                         <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Overall_f1')}>
                                             Overall F1 <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_f1')}</span>
                                         </th>
@@ -409,6 +400,15 @@
                                         </th>
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-purple-200" onClick={() => requestSort('unans_f1')}>
                                             Unans F1 <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_f1')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Overall_Acc')}>
+                                            Overall Acc <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_Acc')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Ans_accuracy')}>
+                                            Ans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Ans_accuracy')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Unans_accuracy')}>
+                                            Unans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Unans_accuracy')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition text-emerald-200" onClick={() => requestSort('ans_correct_in_samples')}>
                                             Ans Correct <span className="text-gray-400 text-[10px]">{getSortIndicator('ans_correct_in_samples')}</span>
@@ -451,12 +451,12 @@
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-gray-600">{row.Method}</td>
-                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
-                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
-                                                <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
                                                 <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_f1)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-purple-800 font-mono">{formatDecimal(row.ans_f1)}</td>
                                                 <td className="px-4 py-3 text-right text-purple-800 font-mono">{formatDecimal(row.unans_f1)}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
+                                                <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
+                                                <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
                                                 <td className="px-4 py-3 text-right text-emerald-700 font-mono">{formatInt(row.unans_correct_in_samples)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-red-700 font-mono">{formatInt(row.FN_correct_present)}</td>

@@ -11,6 +11,7 @@ Run 2026-10-30. All tables: [`RESULTS_raw.md`](RESULTS_raw.md); numbers: `result
 | `data/<ds>_{aware,unaware}.json` | the 20-sample votes in the `experiments_CRP.py` item format + fixed dev/test split |
 | `experiments_vqa.py` | E1–E5 below (imports `../experiments_CRP.py`; numpy + scipy) |
 | `make_report.py` | `results_vqa.json` → `RESULTS_raw.md` + `plots/sequential.png` |
+| `add_new_model_rows.py` | E8: current generative-restaurant models → `../dashboard/results.json` |
 | `export_crp_data.py` | how `data/` was made (needs the VQA codebase in `~/vqa-datasets`, reference only) |
 
 Reproduce: `python vqa/experiments_vqa.py && python vqa/make_report.py` (~10 min CPU).
@@ -155,6 +156,37 @@ none) as abstaining.
   but greedy already abstains on 84% of unanswerable questions, so there is little left to recover.
 - Unaware: the model often rejects false premises on its own, so the IDK-count models gain ~6 F1 over greedy
   (68 → 74–75) and almost reach the aware setting.
+
+### E8: the generative-restaurant models in the current `experiments_CRP.py` (test Overall F1)
+
+Binomial / constrained-Beta-Binomial IDK gates, single-restaurant scores and PYP without an IDK table, run with the
+current `experiments_CRP.py` (`add_new_model_rows.py`, ~1 min CPU; all rows on the dashboard). The four earlier
+TwoRest rows were recomputed with the same code, so they can differ from E1 (e.g. TwoRest_CRP aware: UVQA 47 -> 76,
+HaloQuest 48 -> 75, SpatialUncertain 57 -> 33). The unaware fits are near-degenerate (33 = always abstain), so they
+flip easily. Left four columns: aware; right four: unaware.
+
+| method | UVQA | UNK-VQA | Spatial | HaloQuest | UVQA | UNK-VQA | Spatial | HaloQuest |
+|---|---|---|---|---|---|---|---|---|
+| Greedy | 73 | 40 | 50 | 75 | 27 | 33 | 25 | 68 |
+| Unans_votes + T | 77 | 41 | 58 | 74 | 28 | 40 | 32 | 74 |
+| TwoRest_CRP | 76 | 41 | 33 | 75 | 51 | 43 | 50 | 71 |
+| TwoRest_Reserved_CRP | 80 | 41 | 57 | 74 | 33 | 33 | 50 | 70 |
+| TwoRest_Hurdle_CRP | 80 | 40 | 59 | 73 | 34 | 34 | 48 | 70 |
+| TwoRest_ZI_PYP | 80 | 36 | 59 | 74 | 34 | 34 | 34 | 72 |
+| TwoRest_Binomial_Hurdle_CRP | 81 | 40 | 59 | 75 | 51 | 33 | 50 | 70 |
+| TwoRest_Binomial_ZI_PYP | 81 | 41 | 59 | 75 | 51 | 33 | 50 | 72 |
+| TwoRest_ConstrainedBB_ZI_PYP | 81 | 36 | 59 | 75 | 51 | 33 | 33 | 72 |
+| SingleRest_ZI_PYP_Surprisal | 76 | 41 | 57 | 71 | 33 | 33 | 50 | 33 |
+| SingleRest_ZI_PYP_Predictive | 75 | 40 | 57 | 75 | 33 | 43 | 33 | 73 |
+| SingleRest_Binomial_ZI_PYP_Surprisal | 78 | 39 | 58 | 74 | 33 | 33 | 50 | 72 |
+| SingleRest_Binomial_ZI_PYP_Predictive | 75 | 40 | 58 | 75 | 33 | 43 | 33 | 73 |
+| SingleRest_PYP_NoIDK (keep IDK) | 76 | 41 | 58 | 75 | 51 | 43 | 50 | 72 |
+| TwoRest_PYP_NoIDK (keep IDK) | 76 | 43 | 33 | 75 | 33 | 43 | 37 | 70 |
+
+- Aware: the 1-parameter Binomial gate matches or beats the Beta-Binomial one everywhere (UVQA 81, UNK-VQA 41,
+  SpatialUncertain 59, HaloQuest 75), so the extra Beta-Binomial parameter buys nothing on VQA.
+- Aware, best model vs best rule: UVQA 81 vs 77, UNK-VQA 43 vs 41 (TwoRest_PYP_NoIDK), SpatialUncertain 59 vs 58,
+  HaloQuest 75 vs 75 (greedy). Unaware, the best models reach 50-51 on UVQA/SpatialUncertain vs 28-32 for the rules.
 
 ## Takeaways
 

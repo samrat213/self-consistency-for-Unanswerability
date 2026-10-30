@@ -32,20 +32,28 @@ REQUESTED_EXPERIMENTS = [
     'CRP_k',
     'CRP_theta',
     'Adaptive_Consistency_beta',
-    # --- New Two-Restaurant Bayesian Models ---
+    # --- Low-Parameter 1-Param Gate Models (Binomial pi & Constrained b = 1 - a) ---
+    'TwoRest_Binomial_Hurdle_CRP',
+    'TwoRest_Binomial_ZI_PYP',
+    'TwoRest_ConstrainedBB_ZI_PYP',
+    'SingleRest_Binomial_ZI_PYP_Surprisal',
+    'SingleRest_Binomial_ZI_PYP_Predictive',
+    # --- 2-Param Gate & Reserved-Atom Models ---
     'TwoRest_CRP',
     'TwoRest_Reserved_CRP',
     'TwoRest_Hurdle_CRP',
     'TwoRest_ZI_PYP',
+    'SingleRest_ZI_PYP_Surprisal',
+    'SingleRest_ZI_PYP_Predictive',
+    # --- PYP Without IDK Table (Keep vs Drop IDK in Train & Test) ---
+    'SingleRest_PYP_NoIDK',
+    'TwoRest_PYP_NoIDK',
     # --- Theoretical Upper Bound Oracle ---
     'Oracle_Intermediate'
 ]
 
-# Set to True to run all 16 combinations of (val_idk, val_denom, test_idk, test_denom)
 RUN_ALL_16_ABLATION_COMBOS = True
-
 awareness = ['_abstaintion', '']
-# awareness = ['_abstaintion']
 
 UNANS_PHRASES = ["i don't know", "insufficient", "cannot be answered", "not enough information"]
 UNANS_LABELS = {"ABSTAIN", "DATA_UNCERTAIN", "MODEL_UNCERTAIN", "UNANSWERABLE"}
@@ -55,7 +63,6 @@ UNANS_LABELS = {"ABSTAIN", "DATA_UNCERTAIN", "MODEL_UNCERTAIN", "UNANSWERABLE"}
 # 1. CORE CLUSTERING & EXTRACTION HELPERS
 # ==========================================
 def deep_update(d, u):
-    """Recursively updates a nested dictionary without overwriting sibling keys."""
     for k, v in u.items():
         if isinstance(v, dict):
             d[k] = deep_update(d.get(k, {}), v)
@@ -65,7 +72,6 @@ def deep_update(d, u):
 
 
 def is_sample_abstention(lbl, ans):
-    """Checks if a single generated sample is an explicit abstention ('I don't know')."""
     lbl_str = str(lbl).strip() if lbl is not None else ""
     ans_str = str(ans).strip().lower() if ans is not None else ""
     if lbl_str in UNANS_LABELS:
@@ -76,15 +82,6 @@ def is_sample_abstention(lbl, ans):
 
 
 def extract_clusters(item, ignore_idk=False, up_to_k=None):
-    """
-    Unified cluster extractor for both full samples and sequential prefixes.
-    Returns:
-        N_total: Total samples considered (up_to_k or len(is_correct))
-        n_0: Number of explicit abstention samples
-        m: Number of valid/substantive samples included in clustering
-        clusters: List of lists of sample indices (for included samples)
-        all_clusters_with_idk: List of lists of sample indices (when IDK is kept)
-    """
     is_correct_list = item.get("is_correct", [])
     if not isinstance(is_correct_list, list):
         is_correct_list = [is_correct_list]
@@ -147,11 +144,10 @@ def extract_clusters(item, ignore_idk=False, up_to_k=None):
 
 
 def get_mle_theta(denom_size, K):
-    """Computes MLE concentration parameter theta (alpha) given sample count denom_size and K clusters."""
     if denom_size <= 0 or K <= 1:
         return 0.0
     if K >= denom_size:
-        return 100.0  # Cap finite upper value so thresholding remains well-behaved
+        return 100.0
     def expected_K(theta):
         return sum(theta / (theta + i) for i in range(denom_size))
     low, high = 1e-5, 1e4
@@ -165,7 +161,6 @@ def get_mle_theta(denom_size, K):
 
 
 def get_item_metadata(item, ignore_abstention_tokens=True):
-    """Extracts analytical data for error analysis and histograms."""
     N, n_0, m, clusters, is_correct_list, _ = extract_clusters(
         item, ignore_idk=ignore_abstention_tokens
     )
@@ -191,16 +186,11 @@ def get_item_metadata(item, ignore_abstention_tokens=True):
 
 
 # ==========================================
-# 2. UNIFIED CONSENSUS & VARIATION METHODS
+# 2. BASELINE CONSENSUS & ORACLE METHODS
 # ==========================================
 def get_generalized_sc_consensus(
     item, method='majority', threshold=0.5, ignore_idk=False, denom_mode='N'
 ):
-    """
-    Handles 'most_freq', 'majority', and 'adapted_sc' under all combinations of:
-      - ignore_idk: False (keep IDK in clusters) vs True (filter IDK before clustering)
-      - denom_mode: 'N' (fraction out of total N=20) vs 'm' (fraction out of substantive m = N - n_0)
-    """
     N, n_0, m, clusters, is_correct_list, pred_label_list = extract_clusters(
         item, ignore_idk=ignore_idk
     )
@@ -227,11 +217,6 @@ def get_generalized_sc_consensus(
 def get_generalized_crp_consensus(
     item, method='crp_k', threshold=None, ignore_idk=False, denom_mode='N'
 ):
-    """
-    Handles 'crp_k' and 'crp_theta' under all combinations of:
-      - ignore_idk: False vs True
-      - denom_mode: 'N' (normalize K or solve MLE theta with N) vs 'm' (normalize/solve with m = N - n_0)
-    """
     N, n_0, m, clusters, is_correct_list, pred_label_list = extract_clusters(
         item, ignore_idk=ignore_idk
     )
@@ -245,7 +230,6 @@ def get_generalized_crp_consensus(
 
     is_uncertain = False
     if method == 'crp_k' and threshold is not None:
-        # When threshold <= 1.0, treat as normalized cluster ratio K / denom; else raw K scaled by (20 / denom)
         effective_k = K * (float(N) / float(denom)) if denom_mode == 'm' else K
         if effective_k > threshold:
             is_uncertain = True
@@ -265,11 +249,6 @@ def get_generalized_crp_consensus(
 def get_Adaptive_Consistency_beta_consensus(
     item, threshold=0.95, ignore_idk=False, denom_mode='N'
 ):
-    """
-    Sequential Beta stopping criteria supporting ignore_idk and denom_mode variations.
-    - When denom_mode == 'm', the Beta test compares top cluster 'a' against remaining substantive mass 'm_k - a'
-      (or second cluster 'b'), requiring at least 1 substantive cluster.
-    """
     is_correct_list = item.get("is_correct", [])
     if not is_correct_list:
         return "DATA_UNCERTAIN", None
@@ -285,10 +264,8 @@ def get_Adaptive_Consistency_beta_consensus(
         cluster_sizes = sorted([len(c) for c in clusters], reverse=True)
         a = float(cluster_sizes[0])
         if denom_mode == 'm':
-            # Compare leading cluster against runner-up within active pool
             b = float(cluster_sizes[1]) if len(cluster_sizes) > 1 else 0.0
         else:
-            # If normalizing against N even when ignore_idk=True, count dropped IDK tokens as competing mass
             b_second = float(cluster_sizes[1]) if len(cluster_sizes) > 1 else 0.0
             b = max(b_second, float(n_0_k)) if ignore_idk else b_second
 
@@ -305,27 +282,11 @@ def get_Adaptive_Consistency_beta_consensus(
     return "DATA_UNCERTAIN", None
 
 
-# ==========================================
-# 3.ORACLE UPPER BOUND (1 < K < N)
-# ==========================================
 def get_oracle_intermediate_consensus(item, ignore_idk=False):
-    """
-    Computes the best achievable performance by ANY cluster-distribution algorithm:
-    - If K == 1 (all 20 samples are identical): No distribution-only detector can reject a 20/20 consensus,
-      so it MUST accept the majority cluster.
-    - If K == N (all 20 samples are distinct singletons): No distribution-only detector can accept 20 completely
-      disjoint answers, so it MUST abstain ("DATA_UNCERTAIN").
-    - If 1 < K < N (intermediate cluster count): The oracle uses ground-truth 'should_abstain' to make the
-      optimal accept/abstain decision on the dominant cluster.
-    """
     N, n_0, m, clusters, is_correct_list, pred_label_list = extract_clusters(
         item, ignore_idk=ignore_idk
     )
-    if N == 0:
-        return "DATA_UNCERTAIN", None
-
-    # If all tokens were filtered out as IDK, or 0 clusters exist -> Abstain
-    if not clusters:
+    if N == 0 or not clusters:
         return "DATA_UNCERTAIN", None
 
     K = len(clusters)
@@ -334,15 +295,11 @@ def get_oracle_intermediate_consensus(item, ignore_idk=False):
     largest_cluster = max(clusters, key=len)
     best_i = largest_cluster[0]
 
-    # Boundary Case 1: Unanimous agreement (K == 1 and fills the pool) -> Must Accept
     if K == 1 and denom == N:
         return pred_label_list[best_i], is_correct_list[best_i]
-
-    # Boundary Case 2: Total dispersion (K == N distinct singletons) -> Must Reject/Abstain
     if K >= N:
         return "DATA_UNCERTAIN", None
 
-    # Intermediate Regime (1 < K < N, or partial IDK pool): Oracle makes the optimal decision
     should_abstain = item.get("should_abstain") is True
     if should_abstain:
         return "DATA_UNCERTAIN", None
@@ -351,22 +308,56 @@ def get_oracle_intermediate_consensus(item, ignore_idk=False):
 
 
 # ==========================================
-# 4. TWO-RESTAURANT BAYESIAN MIXTURE MODELS
+# 3. PARAMETER FITTING (1-PARAM BINOMIAL & 2-PARAM BETA-BINOMIAL / PYP)
 # ==========================================
 def extract_seating_stats(data, ignore_idk_in_substantive=True):
-    """Extracts (N, n_0, m, K, cluster_sizes) for every item in a split."""
     stats = []
     for item in data:
         N, n_0, m, clusters, _, _ = extract_clusters(item, ignore_idk=ignore_idk_in_substantive)
         sizes = [len(c) for c in clusters]
+        m_eff = sum(sizes)
         K = len(sizes)
         gt_unans = (item.get("should_abstain") is True)
-        stats.append((N, n_0, m, K, sizes, gt_unans))
+        stats.append((N, n_0, m_eff, K, sizes, gt_unans))
     return stats
 
 
+def fit_binomial_pi_mle(n0_list, N_list):
+    """
+    Closed-form 1-parameter MLE for Binomial gate pi (where b = 1 - pi).
+    Uses Laplace smoothing (+0.5 / +1.0) to prevent log(0) on small validation sets.
+    """
+    total_n0 = float(sum(n0_list))
+    total_N = float(sum(N_list))
+    if total_N <= 0:
+        return 0.5
+    pi = (total_n0 + 0.5) / (total_N + 1.0)
+    return float(np.clip(pi, 1e-4, 1.0 - 1e-4))
+
+
+def fit_constrained_beta_binomial_mle(n0_list, N_list):
+    """
+    1-parameter Beta-Binomial gate where b = 1 - a (so a + b = 1).
+    Fits 'a' in (0, 1) via 1D bounded optimization.
+    """
+    if not n0_list:
+        return 0.5
+    n0_arr = np.array(n0_list, dtype=float)
+    N_arr = np.array(N_list, dtype=float)
+
+    def neg_ll(a):
+        b = 1.0 - a
+        ll = np.sum(
+            scipy.special.betaln(n0_arr + a, (N_arr - n0_arr) + b)
+            - scipy.special.betaln(a, b)
+        )
+        return -float(ll)
+
+    res = scipy.optimize.minimize_scalar(neg_ll, bounds=(1e-4, 1.0 - 1e-4), method='bounded')
+    return float(np.clip(res.x, 1e-4, 1.0 - 1e-4))
+
+
 def fit_beta_binomial_mle(n0_list, N_list):
-    """Fits Beta-Binomial (a, b) parameters via MLE for the IDK table count n_0 out of N."""
     if not n0_list:
         return 0.5, 0.5
     n0_arr = np.array(n0_list, dtype=float)
@@ -389,7 +380,6 @@ def fit_beta_binomial_mle(n0_list, N_list):
 
 
 def fit_crp_alpha_mle(m_list, K_list):
-    """Fits CRP concentration parameter alpha on (m, K) pairs where m >= 1."""
     valid = [(m, K) for m, K in zip(m_list, K_list) if m >= 1 and K >= 1]
     if not valid:
         return 0.5
@@ -414,10 +404,6 @@ def fit_crp_alpha_mle(m_list, K_list):
 
 
 def fit_reserved_crp_mle(N_list, n0_list, K_list):
-    """
-    Fits (alpha, beta) for the Reserved-Atom Dirichlet Process CRP:
-    P(pi | alpha, beta) = [Gamma(alpha+beta)/Gamma(alpha+beta+N)] * [Gamma(beta+n0)/Gamma(beta)] * alpha^K * prod(n_k - 1)!
-    """
     if not N_list:
         return 1.0, 1.0
     N_arr = np.array(N_list, dtype=float)
@@ -444,10 +430,6 @@ def fit_reserved_crp_mle(N_list, n0_list, K_list):
 
 
 def fit_pyp_mle(m_list, K_list, sizes_list):
-    """
-    Fits Two-Parameter Pitman-Yor Process (alpha, d) via exact rising-factorial log-likelihood
-    so cluster sizes n_k do not cancel out.
-    """
     valid = [
         (m, K, sizes)
         for m, K, sizes in zip(m_list, K_list, sizes_list)
@@ -462,13 +444,10 @@ def fit_pyp_mle(m_list, K_list, sizes_list):
             return 1e12
         total_ll = 0.0
         for m, K, sizes in valid:
-            # 1. Table creation weight: sum_{j=1}^{K-1} log(alpha + j*d)
             if K > 1:
                 j_vals = np.arange(1, K, dtype=float)
                 total_ll += np.sum(np.log(alpha + j_vals * d))
-            # 2. Denominator rising factorial: - (gammaln(alpha + m) - gammaln(alpha + 1))
             total_ll -= (scipy.special.gammaln(alpha + m) - scipy.special.gammaln(alpha + 1.0))
-            # 3. Cluster size weight: sum_{k=1}^K [gammaln(n_k - d) - gammaln(1 - d)]
             sizes_arr = np.array(sizes, dtype=float)
             gt1 = sizes_arr[sizes_arr > 1]
             if len(gt1) > 0:
@@ -480,94 +459,93 @@ def fit_pyp_mle(m_list, K_list, sizes_list):
     res = scipy.optimize.minimize(
         neg_ll,
         x0=[1.0, 0.15],
-        bounds=[(-0.999, 500.0), (1e-4, 0.999)],  # alpha > -d is enforced inside neg_ll
+        bounds=[(1e-4, 500.0), (1e-4, 0.999)],
         method='L-BFGS-B'
     )
     return float(res.x[0]), float(res.x[1])
 
 
-def train_two_restaurant_model(val_data, method='TwoRest_ZI_PYP'):
-    """
-    Fits Restaurant A (Answerable) and Restaurant U (Unanswerable) parameters on val_data,
-    then optimizes the Log-Likelihood Ratio (LLR) decision threshold tau on TARGET_METRIC.
-    """
-    # Plain TwoRest_CRP treats IDK as regular clusters; Reserved/Hurdle/ZI-PYP route IDK to Table 0
-    sep_idk = (method != 'TwoRest_CRP')
-    stats = extract_seating_stats(val_data, ignore_idk_in_substantive=sep_idk)
-
-    ans_stats = [s for s in stats if not s[5]]
-    unans_stats = [s for s in stats if s[5]]
-
-    # Fallback if validation split only has 1 class
-    if not ans_stats:
-        ans_stats = stats
-    if not unans_stats:
-        unans_stats = stats
-
-    params = {'method': method}
-
-    if method == 'TwoRest_CRP':
-        params['alpha_A'] = fit_crp_alpha_mle([s[0] for s in ans_stats], [s[3] for s in ans_stats])
-        params['alpha_U'] = fit_crp_alpha_mle([s[0] for s in unans_stats], [s[3] for s in unans_stats])
-        if abs(params['alpha_U'] - params['alpha_A']) < 1e-4:
-            params['alpha_U'] = max(params['alpha_A'] * 2.0, 1.5)
-
-    elif method == 'TwoRest_Reserved_CRP':
-        params['alpha_A'], params['beta_A'] = fit_reserved_crp_mle(
-            [s[0] for s in ans_stats], [s[1] for s in ans_stats], [s[3] for s in ans_stats]
-        )
-        params['alpha_U'], params['beta_U'] = fit_reserved_crp_mle(
-            [s[0] for s in unans_stats], [s[1] for s in unans_stats], [s[3] for s in unans_stats]
-        )
-
-    elif method == 'TwoRest_Hurdle_CRP':
-        params['a_A'], params['b_A'] = fit_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
-        params['a_U'], params['b_U'] = fit_beta_binomial_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
-        params['alpha_A'] = fit_crp_alpha_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats])
-        params['alpha_U'] = fit_crp_alpha_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats])
-
-    elif method == 'TwoRest_ZI_PYP':
-        params['a_A'], params['b_A'] = fit_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
-        params['a_U'], params['b_U'] = fit_beta_binomial_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
-        params['alpha_A'], params['d_A'] = fit_pyp_mle(
-            [s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats]
-        )
-        params['alpha_U'], params['d_U'] = fit_pyp_mle(
-            [s[2] for s in unans_stats], [s[3] for s in unans_stats], [s[4] for s in unans_stats]
-        )
-
-    # Optimize LLR decision threshold tau on val_data
-    llr_scores = [compute_two_restaurant_llr(item, params) for item in val_data]
-    candidate_taus = sorted(list(set(np.percentile(llr_scores, np.linspace(0, 100, 41)))))
-    if 0.0 not in candidate_taus:
-        candidate_taus.append(0.0)
-
-    best_tau = 0.0
-    best_score = -1.0
-    for tau in candidate_taus:
-        trial_params = dict(params, tau=float(tau))
-        res = process_run(val_data, method=method, threshold=trial_params, ignore_abstention_tokens=True)
-        score = extract_target_score(res)
-        if score > best_score:
-            best_score = score
-            best_tau = float(tau)
-
-    params['tau'] = round(best_tau, 4)
-    return params
+def pyp_log_likelihood_single_partition(m_eff, K, sizes, alpha, d):
+    if m_eff <= 0 or K <= 0:
+        return 0.0
+    ll = 0.0
+    if K > 1:
+        j_vals = np.arange(1, K, dtype=float)
+        ll += np.sum(np.log(alpha + j_vals * d))
+    ll -= (scipy.special.gammaln(alpha + m_eff) - scipy.special.gammaln(alpha + 1.0))
+    sizes_arr = np.array(sizes, dtype=float)
+    gt1 = sizes_arr[sizes_arr > 1]
+    if len(gt1) > 0:
+        ll += np.sum(scipy.special.gammaln(gt1 - d) - scipy.special.gammaln(1.0 - d))
+    return float(ll)
 
 
-def compute_two_restaurant_llr(item, params):
-    """Computes Log-Likelihood Ratio log P(pattern | R_U) - log P(pattern | R_A)."""
+def compute_generative_score(item, params):
     method = params['method']
-    sep_idk = (method != 'TwoRest_CRP')
-    N, n_0, m, clusters, _, _ = extract_clusters(item, ignore_idk=sep_idk)
+    test_ignore_idk = params.get('test_ignore_idk', method not in ['TwoRest_CRP'])
+
+    N, n_0, m, clusters, _, _ = extract_clusters(item, ignore_idk=test_ignore_idk)
     if N == 0:
         return 1e6
 
     sizes = [len(c) for c in clusters]
+    m_eff = sum(sizes)
     K = len(sizes)
 
-    if method == 'TwoRest_CRP':
+    # --- 1. LOW-PARAMETER 1-PARAM BINOMIAL & CONSTRAINED (b = 1 - a) MODELS ---
+    if method == 'TwoRest_Binomial_Hurdle_CRP':
+        piU, alU = params['pi_U'], params['alpha_U']
+        piA, alA = params['pi_A'], params['alpha_A']
+        ll_idk_diff = n_0 * np.log(piU / piA) + m * np.log((1.0 - piU) / (1.0 - piA))
+        ll_crp_U = (K * np.log(alU) + scipy.special.gammaln(alU) - scipy.special.gammaln(m + alU)) if m >= 1 else 0.0
+        ll_crp_A = (K * np.log(alA) + scipy.special.gammaln(alA) - scipy.special.gammaln(m + alA)) if m >= 1 else 0.0
+        return float(ll_idk_diff + (ll_crp_U - ll_crp_A))
+
+    elif method == 'TwoRest_Binomial_ZI_PYP':
+        piU, alU, dU = params['pi_U'], params['alpha_U'], params['d_U']
+        piA, alA, dA = params['pi_A'], params['alpha_A'], params['d_A']
+        # 1-Parameter Binomial IDK Gate: pi and (1 - pi)
+        llr = n_0 * np.log(piU / piA) + m * np.log((1.0 - piU) / (1.0 - piA))
+        if m >= 1 and K >= 1:
+            llr += (
+                pyp_log_likelihood_single_partition(m, K, sizes, alU, dU)
+                - pyp_log_likelihood_single_partition(m, K, sizes, alA, dA)
+            )
+        return float(llr)
+
+    elif method == 'TwoRest_ConstrainedBB_ZI_PYP':
+        # 1-Parameter Constrained Beta-Binomial where b = 1 - a
+        aU, alU, dU = params['a_U'], params['alpha_U'], params['d_U']
+        aA, alA, dA = params['a_A'], params['alpha_A'], params['d_A']
+        bU, bA = 1.0 - aU, 1.0 - aA
+        llr = (
+            (scipy.special.betaln(n_0 + aU, m + bU) - scipy.special.betaln(aU, bU))
+            - (scipy.special.betaln(n_0 + aA, m + bA) - scipy.special.betaln(aA, bA))
+        )
+        if m >= 1 and K >= 1:
+            llr += (
+                pyp_log_likelihood_single_partition(m, K, sizes, alU, dU)
+                - pyp_log_likelihood_single_partition(m, K, sizes, alA, dA)
+            )
+        return float(llr)
+
+    elif method == 'SingleRest_Binomial_ZI_PYP_Surprisal':
+        pi0, al0, d0 = params['pi_0'], params['alpha_0'], params['d_0']
+        ll_idk = n_0 * np.log(pi0) + m * np.log(1.0 - pi0)
+        ll_pyp = pyp_log_likelihood_single_partition(m, K, sizes, al0, d0) if (m >= 1 and K >= 1) else 0.0
+        return float(-(ll_idk + ll_pyp))
+
+    elif method == 'SingleRest_Binomial_ZI_PYP_Predictive':
+        pi0, al0, d0 = params['pi_0'], params['alpha_0'], params['d_0']
+        # Empirical posterior IDK rate shrunk slightly toward prior pi0
+        p_idk_next = (n_0 + pi0) / float(N + 1.0)
+        p_new_table = ((al0 + K * d0) / float(m + al0)) if m > 0 else 1.0
+        max_s = max(sizes) if sizes else 0
+        p_stay_dom = ((max_s - d0) / float(m + al0)) if (m > 0 and max_s > 0) else 0.0
+        return float(p_idk_next + (1.0 - p_idk_next) * (p_new_table - p_stay_dom))
+
+    # --- 2. TWO-PARAMETER BETA-BINOMIAL & RESERVED-ATOM MODELS ---
+    elif method == 'TwoRest_CRP':
         aU, aA = params['alpha_U'], params['alpha_A']
         ll_U = K * np.log(aU) + scipy.special.gammaln(aU) - scipy.special.gammaln(N + aU)
         ll_A = K * np.log(aA) + scipy.special.gammaln(aA) - scipy.special.gammaln(N + aA)
@@ -591,10 +569,8 @@ def compute_two_restaurant_llr(item, params):
     elif method == 'TwoRest_Hurdle_CRP':
         aU, bU, alU = params['a_U'], params['b_U'], params['alpha_U']
         aA, bA, alA = params['a_A'], params['b_A'], params['alpha_A']
-        # 1. Beta-Binomial IDK log-likelihood
         ll_idk_U = scipy.special.betaln(n_0 + aU, m + bU) - scipy.special.betaln(aU, bU)
         ll_idk_A = scipy.special.betaln(n_0 + aA, m + bA) - scipy.special.betaln(aA, bA)
-        # 2. Substantive CRP log-likelihood
         ll_crp_U = (K * np.log(alU) + scipy.special.gammaln(alU) - scipy.special.gammaln(m + alU)) if m >= 1 else 0.0
         ll_crp_A = (K * np.log(alA) + scipy.special.gammaln(alA) - scipy.special.gammaln(m + alA)) if m >= 1 else 0.0
         return float((ll_idk_U + ll_crp_U) - (ll_idk_A + ll_crp_A))
@@ -602,42 +578,220 @@ def compute_two_restaurant_llr(item, params):
     elif method == 'TwoRest_ZI_PYP':
         aU, bU, alU, dU = params['a_U'], params['b_U'], params['alpha_U'], params['d_U']
         aA, bA, alA, dA = params['a_A'], params['b_A'], params['alpha_A'], params['d_A']
-        # Term 1: Explicit Abstention (IDK) Signal
         llr = (
             (scipy.special.betaln(n_0 + aU, m + bU) - scipy.special.betaln(aU, bU))
             - (scipy.special.betaln(n_0 + aA, m + bA) - scipy.special.betaln(aA, bA))
         )
         if m >= 1 and K >= 1:
-            # Term 2: Semantic Dispersion (Table Creation & Denominator)
-            if K > 1:
-                j_vals = np.arange(1, K, dtype=float)
-                llr += np.sum(np.log((alU + j_vals * dU) / (alA + j_vals * dA)))
-            llr -= (
-                (scipy.special.gammaln(alU + m) - scipy.special.gammaln(alU + 1.0))
-                - (scipy.special.gammaln(alA + m) - scipy.special.gammaln(alA + 1.0))
+            llr += (
+                pyp_log_likelihood_single_partition(m, K, sizes, alU, dU)
+                - pyp_log_likelihood_single_partition(m, K, sizes, alA, dA)
             )
-            # Term 3: Non-Canceling Cluster Concentration (Table Sizes n_k)
-            sizes_arr = np.array(sizes, dtype=float)
-            gt1 = sizes_arr[sizes_arr > 1]
-            if len(gt1) > 0:
-                llr += np.sum(
-                    (scipy.special.gammaln(gt1 - dU) - scipy.special.gammaln(1.0 - dU))
-                    - (scipy.special.gammaln(gt1 - dA) - scipy.special.gammaln(1.0 - dA))
-                )
         return float(llr)
+
+    elif method == 'SingleRest_ZI_PYP_Surprisal':
+        a0, b0, al0, d0 = params['a_0'], params['b_0'], params['alpha_0'], params['d_0']
+        ll_idk = scipy.special.betaln(n_0 + a0, m + b0) - scipy.special.betaln(a0, b0)
+        ll_pyp = pyp_log_likelihood_single_partition(m, K, sizes, al0, d0) if (m >= 1 and K >= 1) else 0.0
+        return float(-(ll_idk + ll_pyp))
+
+    elif method == 'SingleRest_ZI_PYP_Predictive':
+        a0, b0, al0, d0 = params['a_0'], params['b_0'], params['alpha_0'], params['d_0']
+        p_idk_next = (n_0 + a0) / float(N + a0 + b0)
+        p_new_table = ((al0 + K * d0) / float(m + al0)) if m > 0 else 1.0
+        max_s = max(sizes) if sizes else 0
+        p_stay_dom = ((max_s - d0) / float(m + al0)) if (m > 0 and max_s > 0) else 0.0
+        return float(p_idk_next + (1.0 - p_idk_next) * (p_new_table - p_stay_dom))
+
+    # --- 3. PYP WITHOUT IDK TABLE ---
+    elif method == 'TwoRest_PYP_NoIDK':
+        if m_eff == 0 or K == 0:
+            return 1e6
+        alU, dU = params['alpha_U'], params['d_U']
+        alA, dA = params['alpha_A'], params['d_A']
+        ll_U = pyp_log_likelihood_single_partition(m_eff, K, sizes, alU, dU)
+        ll_A = pyp_log_likelihood_single_partition(m_eff, K, sizes, alA, dA)
+        return float(ll_U - ll_A)
+
+    elif method == 'SingleRest_PYP_NoIDK':
+        if m_eff == 0 or K == 0:
+            return 1e6
+        al0, d0 = params['alpha_0'], params['d_0']
+        ll_pyp = pyp_log_likelihood_single_partition(m_eff, K, sizes, al0, d0)
+        max_s = max(sizes)
+        predictive_ratio = (al0 + K * d0) / max(max_s - d0, 1e-4)
+        return float(-ll_pyp + predictive_ratio)
 
     return 0.0
 
 
-def get_two_restaurant_consensus(item, params):
-    """Predicts answerable vs. unanswerable using the learned Two-Restaurant LLR threshold."""
-    llr = compute_two_restaurant_llr(item, params)
+IDK_TABLE_GENERATIVE_METHODS = {
+    'TwoRest_Binomial_Hurdle_CRP',
+    'TwoRest_Binomial_ZI_PYP',
+    'TwoRest_ConstrainedBB_ZI_PYP',
+    'SingleRest_Binomial_ZI_PYP_Surprisal',
+    'SingleRest_Binomial_ZI_PYP_Predictive',
+    'TwoRest_CRP',
+    'TwoRest_Reserved_CRP',
+    'TwoRest_Hurdle_CRP',
+    'TwoRest_ZI_PYP',
+    'SingleRest_ZI_PYP_Surprisal',
+    'SingleRest_ZI_PYP_Predictive',
+}
+
+GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}
+
+
+def train_generative_restaurant_model(
+    val_data, method='TwoRest_Binomial_ZI_PYP', val_ignore_idk=True, test_ignore_idk=True
+):
+    if method == 'TwoRest_CRP':
+        val_ignore_idk = False
+        test_ignore_idk = False
+    elif method in IDK_TABLE_GENERATIVE_METHODS:
+        val_ignore_idk = True
+        test_ignore_idk = True
+
+    stats = extract_seating_stats(val_data, ignore_idk_in_substantive=val_ignore_idk)
+    ans_stats = [s for s in stats if not s[5]]
+    unans_stats = [s for s in stats if s[5]]
+    if not ans_stats:
+        ans_stats = stats
+    if not unans_stats:
+        unans_stats = stats
+
+    params = {
+        'method': method,
+        'val_ignore_idk': val_ignore_idk,
+        'test_ignore_idk': test_ignore_idk
+    }
+
+    # --- 1-Parameter Gate Models ---
+    if method == 'TwoRest_Binomial_Hurdle_CRP':
+        piA = fit_binomial_pi_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        piU = fit_binomial_pi_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
+        alA = fit_crp_alpha_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats])
+        alU = fit_crp_alpha_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats])
+        params.update({
+            'pi_A': round(piA, 4), 'alpha_A': round(alA, 4),
+            'pi_U': round(piU, 4), 'alpha_U': round(alU, 4)
+        })
+
+    elif method == 'TwoRest_Binomial_ZI_PYP':
+        piA = fit_binomial_pi_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        piU = fit_binomial_pi_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
+        alA, dA = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        alU, dU = fit_pyp_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats], [s[4] for s in unans_stats])
+        params.update({
+            'pi_A': round(piA, 4), 'alpha_A': round(alA, 4), 'd_A': round(dA, 4),
+            'pi_U': round(piU, 4), 'alpha_U': round(alU, 4), 'd_U': round(dU, 4)
+        })
+
+    elif method == 'TwoRest_ConstrainedBB_ZI_PYP':
+        aA = fit_constrained_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        aU = fit_constrained_beta_binomial_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
+        alA, dA = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        alU, dU = fit_pyp_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats], [s[4] for s in unans_stats])
+        params.update({
+            'a_A': round(aA, 4), 'b_A_implied': round(1.0 - aA, 4), 'alpha_A': round(alA, 4), 'd_A': round(dA, 4),
+            'a_U': round(aU, 4), 'b_U_implied': round(1.0 - aU, 4), 'alpha_U': round(alU, 4), 'd_U': round(dU, 4)
+        })
+
+    elif method in ['SingleRest_Binomial_ZI_PYP_Surprisal', 'SingleRest_Binomial_ZI_PYP_Predictive']:
+        pi0 = fit_binomial_pi_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        al0, d0 = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        params.update({
+            'pi_0': round(pi0, 4), 'alpha_0': round(al0, 4), 'd_0': round(d0, 4)
+        })
+
+    # --- 2-Parameter Gate & Baseline Generative Models ---
+    elif method == 'TwoRest_CRP':
+        params['alpha_A'] = round(fit_crp_alpha_mle([s[0] for s in ans_stats], [s[3] for s in ans_stats]), 4)
+        params['alpha_U'] = round(fit_crp_alpha_mle([s[0] for s in unans_stats], [s[3] for s in unans_stats]), 4)
+
+    elif method == 'TwoRest_Reserved_CRP':
+        aA, bA = fit_reserved_crp_mle([s[0] for s in ans_stats], [s[1] for s in ans_stats], [s[3] for s in ans_stats])
+        aU, bU = fit_reserved_crp_mle([s[0] for s in unans_stats], [s[1] for s in unans_stats], [s[3] for s in unans_stats])
+        params.update({'alpha_A': round(aA, 4), 'beta_A': round(bA, 4), 'alpha_U': round(aU, 4), 'beta_U': round(bU, 4)})
+
+    elif method == 'TwoRest_Hurdle_CRP':
+        aA, bA = fit_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        aU, bU = fit_beta_binomial_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
+        alA = fit_crp_alpha_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats])
+        alU = fit_crp_alpha_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats])
+        params.update({
+            'a_A': round(aA, 4), 'b_A': round(bA, 4), 'alpha_A': round(alA, 4),
+            'a_U': round(aU, 4), 'b_U': round(bU, 4), 'alpha_U': round(alU, 4)
+        })
+
+    elif method == 'TwoRest_ZI_PYP':
+        aA, bA = fit_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        aU, bU = fit_beta_binomial_mle([s[1] for s in unans_stats], [s[0] for s in unans_stats])
+        alA, dA = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        alU, dU = fit_pyp_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats], [s[4] for s in unans_stats])
+        params.update({
+            'a_A': round(aA, 4), 'b_A': round(bA, 4), 'alpha_A': round(alA, 4), 'd_A': round(dA, 4),
+            'a_U': round(aU, 4), 'b_U': round(bU, 4), 'alpha_U': round(alU, 4), 'd_U': round(dU, 4)
+        })
+
+    elif method == 'TwoRest_PYP_NoIDK':
+        alA, dA = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        alU, dU = fit_pyp_mle([s[2] for s in unans_stats], [s[3] for s in unans_stats], [s[4] for s in unans_stats])
+        params.update({
+            'alpha_A': round(alA, 4), 'd_A': round(dA, 4),
+            'alpha_U': round(alU, 4), 'd_U': round(dU, 4)
+        })
+
+    elif method in ['SingleRest_ZI_PYP_Surprisal', 'SingleRest_ZI_PYP_Predictive']:
+        a0, b0 = fit_beta_binomial_mle([s[1] for s in ans_stats], [s[0] for s in ans_stats])
+        al0, d0 = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        params.update({
+            'a_0': round(a0, 4), 'b_0': round(b0, 4),
+            'alpha_0': round(al0, 4), 'd_0': round(d0, 4)
+        })
+
+    elif method == 'SingleRest_PYP_NoIDK':
+        al0, d0 = fit_pyp_mle([s[2] for s in ans_stats], [s[3] for s in ans_stats], [s[4] for s in ans_stats])
+        params.update({'alpha_0': round(al0, 4), 'd_0': round(d0, 4)})
+
+    # Optimize decision threshold tau on validation split
+    val_eval_params = dict(params, test_ignore_idk=val_ignore_idk)
+    val_scores = [compute_generative_score(item, val_eval_params) for item in val_data]
+    finite_scores = [s for s in val_scores if np.isfinite(s) and abs(s) < 1e5]
+    if not finite_scores:
+        finite_scores = [0.0]
+
+    candidate_taus = sorted(list(set(np.percentile(finite_scores, np.linspace(0, 100, 45)))))
+    if 0.0 not in candidate_taus:
+        candidate_taus.append(0.0)
+
+    best_tau = 0.0
+    best_score = -1.0
+    for tau in tqdm(candidate_taus, desc=method):
+        trial_params = dict(val_eval_params, tau=float(tau))
+        res = process_run(
+            val_data, method=method, threshold=trial_params,
+            ignore_abstention_tokens=val_ignore_idk
+        )
+        score = extract_target_score(res)
+        if score > best_score:
+            best_score = score
+            best_tau = float(tau)
+
+    params['tau'] = round(best_tau, 4)
+    return params
+
+
+def get_generative_restaurant_consensus(item, params):
+    score = compute_generative_score(item, params)
     tau = params.get('tau', 0.0)
-    if llr > tau:
+    if score > tau:
         return "DATA_UNCERTAIN", None
 
-    sep_idk = (params['method'] != 'TwoRest_CRP')
-    N, n_0, m, clusters, is_correct_list, pred_label_list = extract_clusters(item, ignore_idk=sep_idk)
+    test_ignore_idk = params.get('test_ignore_idk', True)
+    N, n_0, m, clusters, is_correct_list, pred_label_list = extract_clusters(
+        item, ignore_idk=test_ignore_idk
+    )
     if not clusters:
         return "DATA_UNCERTAIN", None
 
@@ -647,10 +801,9 @@ def get_two_restaurant_consensus(item, params):
 
 
 # ==========================================
-# 5. EVALUATION & METRICS PIPELINE
+# 4. EVALUATION & METRICS PIPELINE
 # ==========================================
 def calculate_metrics(res):
-    """Calculates Precision, Accuracy, Sample Recall (Coverage), F1, and Balanced Accuracy."""
     matrix = res["matrix_gt_pred_counts"]
     
     tp_a = matrix["ANSWERABLE"]["Pred_ANSWERABLE_correct"]
@@ -754,7 +907,6 @@ def process_run(
             if hist_key in res["error_analysis"]["answerable_max_freq_histogram"]:
                 res["error_analysis"]["answerable_max_freq_histogram"][hist_key] += 1
 
-        # Route Prediction Method
         if method == 'greedy':
             pred_val = item.get("pred_label", [])
             eff_pred = pred_val[0] if isinstance(pred_val, list) and len(pred_val) > 0 else pred_val
@@ -780,8 +932,8 @@ def process_run(
                 item, threshold=threshold,
                 ignore_idk=ignore_abstention_tokens, denom_mode=denom_mode
             )
-        elif method in ['TwoRest_CRP', 'TwoRest_Reserved_CRP', 'TwoRest_Hurdle_CRP', 'TwoRest_ZI_PYP']:
-            eff_pred, eff_correct = get_two_restaurant_consensus(item, params=threshold)
+        elif method in GENERATIVE_METHODS:
+            eff_pred, eff_correct = get_generative_restaurant_consensus(item, params=threshold)
         elif method == 'Oracle_Intermediate':
             eff_pred, eff_correct = get_oracle_intermediate_consensus(
                 item, ignore_idk=ignore_abstention_tokens
@@ -809,8 +961,7 @@ def process_run(
             if is_pred_answerable:
                 res["matrix_gt_pred_counts"][gt]['Pred_ANSWERABLE'] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["count"] += 1
-                if correct_present:
-                    res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
+                res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_winning_freq"] += max_freq
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_total_clusters"] += total_clusters
             elif is_pred_unanswerable:
@@ -837,7 +988,7 @@ def process_run(
 
 
 # ==========================================
-# 6. THRESHOLD & ABLATION GRID OPTIMIZATION
+# 5. THRESHOLD & ABLATION GRID OPTIMIZATION
 # ==========================================
 def extract_target_score(res):
     if TARGET_METRIC == 'overall_accuracy': return res["metrics"]["overall_accuracy"]
@@ -864,7 +1015,7 @@ def learn_best_threshold(val_data, method, val_ignore_idk=True, val_denom='N'):
     else:
         return None
     
-    for t in test_thresholds:
+    for t in tqdm(test_thresholds,desc=method):
         res = process_run(
             val_data, method=method, threshold=t,
             ignore_abstention_tokens=val_ignore_idk, denom_mode=val_denom
@@ -878,16 +1029,7 @@ def learn_best_threshold(val_data, method, val_ignore_idk=True, val_denom='N'):
 
 
 def run_16_combination_grid(val_samples, test_samples, base_exp_name, internal_method, fixed_threshold=None):
-    """
-    Runs all combinations of:
-      1. val_ignore_idk in [False, True]   (keep vs. drop 'I don't know' during threshold optimization)
-      2. val_denom in ['N', 'm']           (out of 20 vs. out of substantive m = N - n_0 during val)
-      3. test_ignore_idk in [False, True]  (keep vs. drop 'I don't know' during test evaluation)
-      4. test_denom in ['N', 'm']          (out of 20 vs. out of substantive m = N - n_0 during test)
-    """
     grid_results = {}
-
-    # Pre-learn thresholds for the 4 validation settings (or use fixed_threshold if provided, e.g., Majority=0.5)
     learned_thresholds = {}
     for val_idk, val_den in itertools.product([False, True], ['N', 'm']):
         if fixed_threshold is not None:
@@ -926,7 +1068,7 @@ def run_16_combination_grid(val_samples, test_samples, base_exp_name, internal_m
 
 
 # ==========================================
-# 7. DATA SPLIT & EXECUTION UTILS
+# 6. DATA SPLIT & EXECUTION UTILS
 # ==========================================
 def get_split_identifiers(split, dataset):
     split_dir = os.path.join(DATA_DIRECTORY, split)
@@ -974,16 +1116,12 @@ def load_data(filepath):
 
 
 def process_combination(model, dataset, aware, val_q, test_q, req_exps):
-    """Worker function to process a single (model, dataset, awareness) combination."""
-    req_exps = req_exps if isinstance(req_exps, list) else [req_exps]
-
     model_dir = os.path.join(BASE_DIRECTORY, model)
     greedy_file = os.path.join(model_dir, f"{dataset}{aware}_greedy.json")
     samples_file = os.path.join(model_dir, f"{dataset}{aware}_samples.json")
     
     local_result = {}
     
-    # 1. Baseline Greedy
     if 'Greedy' in req_exps:
         greedy_all_data = load_data(greedy_file)
         if greedy_all_data:
@@ -992,7 +1130,6 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                 local_result['Greedy'] = process_run(greedy_test_data, method='greedy')
                 local_result['Greedy']['val_set'] = process_run(greedy_val_data, method='greedy')
             
-    # 2. Sampling Experiments
     sampling_reqs = [e for e in req_exps if e != 'Greedy']
     if sampling_reqs:
         samples_all_data = load_data(samples_file)
@@ -1000,7 +1137,7 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
             val_samples, test_samples = split_output_data(samples_all_data, val_q, test_q)
             
             if val_samples and test_samples:
-                # --- Unthresholded Self-Consistency (Test with and without IDK) ---
+                # 1. Unthresholded Self-Consistency
                 if 'self Consistency' in req_exps:
                     for test_idk in [False, True]:
                         tag = "dropIDK" if test_idk else "keepIDK"
@@ -1012,7 +1149,7 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                             val_samples, method='most_freq', ignore_abstention_tokens=test_idk
                         )
 
-                # --- Thresholded Baselines + Full 16-Combination Ablation Grid ---
+                # 2. Existing Thresholded Baselines + 16-Combination Grid
                 method_map = [
                     ('self Consistency + T', 'majority', None),
                     ('Majority', 'majority', 0.5),
@@ -1023,7 +1160,6 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                 ]
                 for exp_name, internal_m, fixed_t in method_map:
                     if exp_name in req_exps:
-                        # Standard default run (preserves backward-compatible key)
                         opt_t = fixed_t if fixed_t is not None else learn_best_threshold(
                             val_samples, internal_m, val_ignore_idk=True, val_denom='N'
                         )
@@ -1038,26 +1174,48 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                         )
                         local_result[exp_name]['learned_threshold'] = round(opt_t, 4) if isinstance(opt_t, float) else opt_t
 
-                        # Full 16-way Combinatorial Grid (Val IDK x Val Denom x Test IDK x Test Denom)
                         if RUN_ALL_16_ABLATION_COMBOS:
                             grid_dict = run_16_combination_grid(
                                 val_samples, test_samples, exp_name, internal_m, fixed_threshold=fixed_t
                             )
-                            local_result[exp_name]['ablation_grid'] = grid_dict
+                            local_result.update(grid_dict)
 
-                # --- New Two-Restaurant Bayesian Mixture Models ---
-                for tr_method in ['TwoRest_CRP', 'TwoRest_Reserved_CRP', 'TwoRest_Hurdle_CRP', 'TwoRest_ZI_PYP']:
-                    if tr_method in req_exps:
-                        learned_params = train_two_restaurant_model(val_samples, method=tr_method)
-                        local_result[tr_method] = process_run(
-                            test_samples, method=tr_method, threshold=learned_params, ignore_abstention_tokens=True
+                # 3. All Generative Models WITH Dedicated IDK Table (1-Param Binomial, Constrained BB, and 2-Param BB)
+                for gm in IDK_TABLE_GENERATIVE_METHODS:
+                    if gm in req_exps:
+                        learned_params = train_generative_restaurant_model(val_samples, method=gm)
+                        local_result[gm] = process_run(
+                            test_samples, method=gm, threshold=learned_params, ignore_abstention_tokens=True
                         )
-                        local_result[tr_method]['val_set'] = process_run(
-                            val_samples, method=tr_method, threshold=learned_params, ignore_abstention_tokens=True
+                        local_result[gm]['val_set'] = process_run(
+                            val_samples, method=gm, threshold=learned_params, ignore_abstention_tokens=True
                         )
-                        local_result[tr_method]['learned_params'] = learned_params
+                        local_result[gm]['learned_params'] = learned_params
 
-                # --- Theoretical Upper Bound Oracle (1 < K < N) ---
+                # 4. PYP WITHOUT IDK Table (Single & Two-Restaurant across Keep vs Drop IDK)
+                for no_idk_method in ['SingleRest_PYP_NoIDK', 'TwoRest_PYP_NoIDK']:
+                    if no_idk_method in req_exps:
+                        for val_idk, test_idk in itertools.product([False, True], [False, True]):
+                            v_tag = "V_dropIDK" if val_idk else "V_keepIDK"
+                            t_tag = "T_dropIDK" if test_idk else "T_keepIDK"
+                            exp_key = f"{no_idk_method}__{v_tag}__{t_tag}"
+
+                            learned_params = train_generative_restaurant_model(
+                                val_samples, method=no_idk_method,
+                                val_ignore_idk=val_idk, test_ignore_idk=test_idk
+                            )
+                            local_result[exp_key] = process_run(
+                                test_samples, method=no_idk_method, threshold=learned_params,
+                                ignore_abstention_tokens=test_idk
+                            )
+                            val_eval_params = dict(learned_params, test_ignore_idk=val_idk)
+                            local_result[exp_key]['val_set'] = process_run(
+                                val_samples, method=no_idk_method, threshold=val_eval_params,
+                                ignore_abstention_tokens=val_idk
+                            )
+                            local_result[exp_key]['learned_params'] = learned_params
+
+                # 5. Theoretical Upper Bound Oracle (1 < K < N)
                 if 'Oracle_Intermediate' in req_exps:
                     for ignore_idk in [False, True]:
                         tag = "dropIDK" if ignore_idk else "keepIDK"
@@ -1069,12 +1227,9 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
                             val_samples, method='Oracle_Intermediate', ignore_abstention_tokens=ignore_idk
                         )
                     
-    return model, dataset, aware, req_exps[0], local_result
+    return model, dataset, aware, local_result
 
 
-# ==========================================
-# MAIN EXECUTION
-# ==========================================
 if __name__ == "__main__":
     if os.path.exists(OUTPUT_FILE):
         print(f"Loading existing results from {OUTPUT_FILE}...")
@@ -1089,7 +1244,6 @@ if __name__ == "__main__":
 
     print(f"Running Models: {MODELS}")
     print(f"Running Experiments: {REQUESTED_EXPERIMENTS}")
-    print("Pre-fetching dataset splits...")
     dataset_splits = {
         ds: {'val': get_split_identifiers('val', ds), 'test': get_split_identifiers('test', ds)}
         for ds in datasets
@@ -1107,20 +1261,19 @@ if __name__ == "__main__":
                 if aware not in master_result[model][dataset]:
                     master_result[model][dataset][aware] = {}
                 for exp in REQUESTED_EXPERIMENTS:
-                    tasks.append((model, dataset, aware, val_q, test_q, exp))
+                    tasks.append((model, dataset, aware, val_q, test_q, [exp]))
 
     print(f"Dispatching {len(tasks)} tasks to process pool...")
     with concurrent.futures.ProcessPoolExecutor() as executor:
         futures = {executor.submit(process_combination, *task): task for task in tasks}
-        
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing Experiments"):
             try:
-                mod, ds, aw, exp, res_dict = future.result()
+                mod, ds, aw, res_dict = future.result()
                 if res_dict:
                     deep_update(master_result[mod][ds][aw], res_dict)
             except Exception as exc:
                 task_info = futures[future]
-                print(f"Task generated an exception for {task_info[:4]}: {exc}")
+                print(f"Task generated an exception for {task_info[:3]}: {exc}")
                 
     print(f"Writing updated results to {OUTPUT_FILE}...")
     with open(OUTPUT_FILE, 'w') as f:

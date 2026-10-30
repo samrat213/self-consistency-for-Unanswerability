@@ -497,8 +497,7 @@ def process_run(data, method, threshold=None, ignore_abstention_tokens = False):
             if is_pred_answerable:
                 res["matrix_gt_pred_counts"][gt]['Pred_ANSWERABLE'] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["count"] += 1
-                if correct_present:
-                    res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
+                res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_winning_freq"] += max_freq
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_total_clusters"] += total_clusters
             elif is_pred_unanswerable:

@@ -169,6 +169,7 @@
             const [filterDataset, setFilterDataset] = useState("All");
             const [filterAwareness, setFilterAwareness] = useState("All");
             const [filterMethods, setFilterMethods] = useState([]);
+            const [showAblations, setShowAblations] = useState(false);
             
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
@@ -255,16 +256,20 @@
             const uniqueModels = useMemo(() => [...new Set(data.map(d => d.Model))], [data]);
             const uniqueDatasets = useMemo(() => [...new Set(data.map(d => d.Dataset))], [data]);
             const uniqueAwareness = useMemo(() => [...new Set(data.map(d => d.Awareness))], [data]);
-            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.Method))], [data]);
+            // Ablation rows: keep/drop-IDK combinations for validation (V_) and test (T_). Only the keep/keep
+            // variant of a method is a method in its own right; the others are hidden unless asked for.
+            const isAblation = (m) => m.includes("__V_") && !m.endsWith("__V_keepIDK__T_keepIDK");
+            const uniqueMethods = useMemo(() => [...new Set(data.map(d => d.Method))].filter(m => showAblations || !isAblation(m)), [data, showAblations]);
 
             const filteredData = useMemo(() => {
                 return data.filter(row => {
                     return (filterModel === "All" || row.Model === filterModel) &&
                            (filterDataset === "All" || row.Dataset === filterDataset) &&
                            (filterAwareness === "All" || row.Awareness === filterAwareness) &&
-                           (filterMethods.length === 0 || filterMethods.includes(row.Method));
+                           (filterMethods.length === 0 || filterMethods.includes(row.Method)) &&
+                           (showAblations || !isAblation(row.Method) || filterMethods.includes(row.Method));
                 });
-            }, [data, filterModel, filterDataset, filterAwareness, filterMethods]);
+            }, [data, filterModel, filterDataset, filterAwareness, filterMethods, showAblations]);
 
             const sortedData = useMemo(() => {
                 let sortableItems = [...filteredData];
@@ -366,6 +371,10 @@
                         <div>
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Method</label>
                             <MultiSelect options={uniqueMethods} selected={filterMethods} onChange={setFilterMethods} allLabel="All Methods" />
+                            <label className="flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer">
+                                <input type="checkbox" checked={showAblations} onChange={(e) => setShowAblations(e.target.checked)} />
+                                Show ablation rows (V_/T_ keep/drop-IDK variants)
+                            </label>
                         </div>
                     </div>
 

@@ -20,7 +20,7 @@ TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy'
 datasets = [
     'ReliableMath', 
     "brokenmath_type_answer_AU",
-    "brokenmath_type_proof_AU",
+    # "brokenmath_type_proof_AU",
 ]
 
 REQUESTED_EXPERIMENTS = [
@@ -770,13 +770,13 @@ IDK_TABLE_GENERATIVE_METHODS = {
     'TwoRest_Binomial_ZI_PYP',
     'TwoRest_ConstrainedBB_ZI_PYP',
     'SingleRest_Binomial_ZI_PYP_Surprisal',
-    'SingleRest_Binomial_ZI_PYP_Predictive',
+    # 'SingleRest_Binomial_ZI_PYP_Predictive',
     'TwoRest_CRP',
     'TwoRest_Reserved_CRP',
     'TwoRest_Hurdle_CRP',
     'TwoRest_ZI_PYP',
     'SingleRest_ZI_PYP_Surprisal',
-    'SingleRest_ZI_PYP_Predictive',
+    # 'SingleRest_ZI_PYP_Predictive',
 }
 
 GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}

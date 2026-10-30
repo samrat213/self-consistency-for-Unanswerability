@@ -46,8 +46,8 @@ REQUESTED_EXPERIMENTS = [
     'SingleRest_ZI_PYP_Surprisal',
     'SingleRest_ZI_PYP_Predictive',
     # --- PYP Without IDK Table (Keep vs Drop IDK in Train & Test) ---
-    'SingleRest_PYP_NoIDK',
-    'TwoRest_PYP_NoIDK',
+    # 'SingleRest_PYP_NoIDK',
+    # 'TwoRest_PYP_NoIDK',
     # --- Theoretical Upper Bound Oracle ---
     'Oracle_Intermediate'
 ]
@@ -779,6 +779,7 @@ IDK_TABLE_GENERATIVE_METHODS = {
     # 'SingleRest_ZI_PYP_Predictive',
 }
 
+GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}
 GENERATIVE_METHODS = IDK_TABLE_GENERATIVE_METHODS | {'TwoRest_PYP_NoIDK', 'SingleRest_PYP_NoIDK'}
 
 

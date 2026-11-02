@@ -18,11 +18,11 @@ OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy', 'overall_f1', 'ans_f1'
 
 datasets = [
-    'ReliableMath', 
-    "brokenmath_type_answer_AU",
-    "brokenmath_type_proof_AU",
-    "UA_commonsense",
-    "UA_math",
+    # 'ReliableMath', 
+    # "brokenmath_type_answer_AU",
+    # "brokenmath_type_proof_AU",
+    # "UA_commonsense",
+    # "UA_math",
     'grailqa'
 ]
 

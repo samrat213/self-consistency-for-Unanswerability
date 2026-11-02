@@ -115,13 +115,23 @@ def is_sample_abstention(lbl, ans):
 
 
 def _compute_clusters_raw(item, ignore_idk=False, up_to_k=None):
-    is_correct_list = item.get("is_correct", [])
-    if not isinstance(is_correct_list, list):
-        is_correct_list = [is_correct_list]
+    raw_corr = item.get("is_correct", [])
+    if not isinstance(raw_corr, list):
+        raw_corr = [raw_corr]
+    # Flatten/coerce any nested list or None in is_correct to bool
+    is_correct_list = [
+        bool(x[0]) if isinstance(x, list) and len(x) > 0 else bool(x)
+        for x in raw_corr
+    ]
 
-    pred_label_list = item.get("pred_label", [])
-    if not isinstance(pred_label_list, list):
-        pred_label_list = [pred_label_list]
+    raw_lbl = item.get("pred_label", [])
+    if not isinstance(raw_lbl, list):
+        raw_lbl = [raw_lbl]
+    # Flatten/coerce any nested list in pred_label to a hashable string
+    pred_label_list = [
+        str(x[0]).strip() if isinstance(x, list) and len(x) > 0 else ("" if isinstance(x, list) or x is None else str(x).strip())
+        for x in raw_lbl
+    ]
 
     pred_answer_list = item.get("pred_answer", [])
     if not isinstance(pred_answer_list, list):
@@ -1376,9 +1386,61 @@ def process_combination(model, dataset, aware, val_q, test_q, req_exps):
     return model, dataset, aware, local_result
 
 
+# if __name__ == "__main__":
+#     # Start fresh or sort keys so old unnumbered keys don't clutter the JSON
+#     master_result = {model: {} for model in MODELS}
+
+#     print(f"Running Models: {MODELS}")
+#     print(f"Running Experiments (in complexity order): {[f'{i:02d}_{n}' for i, n in ORDERED_EXPERIMENTS]}")
+#     dataset_splits = {
+#         ds: {'val': get_split_identifiers('val', ds), 'test': get_split_identifiers('test', ds)}
+#         for ds in datasets
+#     }
+    
+#     tasks = []
+#     for model in MODELS:
+#         if model not in master_result:
+#             master_result[model] = {}
+#         for dataset in datasets:
+#             if dataset not in master_result[model]:
+#                 master_result[model][dataset] = {}
+#             val_q, test_q = dataset_splits[dataset]['val'], dataset_splits[dataset]['test']
+#             for aware in awareness:
+#                 if aware not in master_result[model][dataset]:
+#                     master_result[model][dataset][aware] = {}
+#                     master_result[model][dataset][aware] = {}
+#                 for exp in REQUESTED_EXPERIMENTS:
+#                     tasks.append((model, dataset, aware, val_q, test_q, [exp]))
+
+#     print(f"Dispatching {len(tasks)} tasks to process pool...")
+#     with concurrent.futures.ProcessPoolExecutor() as executor:
+#         futures = {executor.submit(process_combination, *task): task for task in tasks}
+#         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing Experiments"):
+#             try:
+#                 mod, ds, aw, res_dict = future.result()
+#                 if res_dict:
+#                     # Preserve exact 01_ -> 22_ key ordering in the output dictionary
+#                     ordered_dict = {k: res_dict[k] for k in sorted(res_dict.keys())}
+#                     master_result[mod][ds][aw] = ordered_dict
+#             except Exception as exc:
+#                 task_info = futures[future]
+#                 print(f"Task generated an exception for {task_info[:3]}: {exc}")
+                
+#     print(f"Writing ordered results to {OUTPUT_FILE}...")
+#     with open(OUTPUT_FILE, 'w') as f:
+#         json.dump(master_result, f, indent=2)
+#     print("Done!")
+
 if __name__ == "__main__":
-    # Start fresh or sort keys so old unnumbered keys don't clutter the JSON
-    master_result = {model: {} for model in MODELS}
+    # Load existing results if present so partial/previous runs aren't lost
+    if os.path.exists(OUTPUT_FILE):
+        try:
+            with open(OUTPUT_FILE, 'r') as f:
+                master_result = json.load(f)
+        except Exception:
+            master_result = {model: {} for model in MODELS}
+    else:
+        master_result = {model: {} for model in MODELS}
 
     print(f"Running Models: {MODELS}")
     print(f"Running Experiments (in complexity order): {[f'{i:02d}_{n}' for i, n in ORDERED_EXPERIMENTS]}")
@@ -1398,20 +1460,24 @@ if __name__ == "__main__":
             for aware in awareness:
                 if aware not in master_result[model][dataset]:
                     master_result[model][dataset][aware] = {}
-                    master_result[model][dataset][aware] = {}
-                for exp in REQUESTED_EXPERIMENTS:
-                    tasks.append((model, dataset, aware, val_q, test_q, [exp]))
+                # Pass ALL REQUESTED_EXPERIMENTS in ONE task per (model, dataset, aware)
+                # so the JSON file is loaded and pre-cached only ONCE instead of 22 times!
+                tasks.append((model, dataset, aware, val_q, test_q, REQUESTED_EXPERIMENTS))
 
-    print(f"Dispatching {len(tasks)} tasks to process pool...")
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    # Cap max_workers to prevent OOM on high-core-count servers
+    max_workers = min(8, os.cpu_count() or 4)
+    print(f"Dispatching {len(tasks)} dataset-level tasks across {max_workers} workers...")
+    
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(process_combination, *task): task for task in tasks}
-        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing Experiments"):
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing Combinations"):
             try:
                 mod, ds, aw, res_dict = future.result()
                 if res_dict:
-                    # Preserve exact 01_ -> 22_ key ordering in the output dictionary
-                    ordered_dict = {k: res_dict[k] for k in sorted(res_dict.keys())}
-                    master_result[mod][ds][aw] = ordered_dict
+                    # Merge with any existing keys and sort in 01_ -> 22_ order
+                    combined = master_result[mod][ds].get(aw, {})
+                    combined.update(res_dict)
+                    master_result[mod][ds][aw] = {k: combined[k] for k in sorted(combined.keys())}
             except Exception as exc:
                 task_info = futures[future]
                 print(f"Task generated an exception for {task_info[:3]}: {exc}")

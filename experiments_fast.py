@@ -50,30 +50,30 @@ ORDERED_EXPERIMENTS = [
     (21, 'TwoRest_ZI_PYP'),
     (22, 'Oracle_Intermediate'),
 ]
-REQUESTED_EXPERIMENTS = [
-'Greedy'
-'self_Consistency'
-'Majority'
-'self_Consistency_T'
-'scUn'
-'CRP_k'
-'CRP_theta'
-'Adaptive_Consistency_beta'
-'SingleRest_PYP_NoIDK'
-'SingleRest_Binomial_ZI_PYP_Surprisal'
-'SingleRest_Binomial_ZI_PYP_Predictive'
-'SingleRest_ZI_PYP_Surprisal'
-'SingleRest_ZI_PYP_Predictive'
-'TwoRest_CRP'
-'TwoRest_PYP_NoIDK'
-'TwoRest_Reserved_CRP'
-'TwoRest_Binomial_Hurdle_CRP'
-'TwoRest_Hurdle_CRP'
-'TwoRest_Binomial_ZI_PYP'
-'TwoRest_ConstrainedBB_ZI_PYP'
-'TwoRest_ZI_PYP'
-'Oracle_Intermediate'
-]
+# REQUESTED_EXPERIMENTS = [
+# 'Greedy'
+# 'self_Consistency'
+# 'Majority'
+# 'self_Consistency_T'
+# 'scUn'
+# 'CRP_k'
+# 'CRP_theta'
+# 'Adaptive_Consistency_beta'
+# 'SingleRest_PYP_NoIDK'
+# 'SingleRest_Binomial_ZI_PYP_Surprisal'
+# 'SingleRest_Binomial_ZI_PYP_Predictive'
+# 'SingleRest_ZI_PYP_Surprisal'
+# 'SingleRest_ZI_PYP_Predictive'
+# 'TwoRest_CRP'
+# 'TwoRest_PYP_NoIDK'
+# 'TwoRest_Reserved_CRP'
+# 'TwoRest_Binomial_Hurdle_CRP'
+# 'TwoRest_Hurdle_CRP'
+# 'TwoRest_Binomial_ZI_PYP'
+# 'TwoRest_ConstrainedBB_ZI_PYP'
+# 'TwoRest_ZI_PYP'
+# 'Oracle_Intermediate'
+# ]
 REQUESTED_EXPERIMENTS = [name for _, name in ORDERED_EXPERIMENTS]
 
 # The 3 requested combinations for existing threshold methods:
@@ -1398,7 +1398,7 @@ if __name__ == "__main__":
             for aware in awareness:
                 if aware not in master_result[model][dataset]:
                     master_result[model][dataset][aware] = {}
-                master_result[model][dataset][aware] = {}
+                    master_result[model][dataset][aware] = {}
                 for exp in REQUESTED_EXPERIMENTS:
                     tasks.append((model, dataset, aware, val_q, test_q, [exp]))
 

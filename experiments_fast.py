@@ -22,7 +22,8 @@ datasets = [
     "brokenmath_type_answer_AU",
     "brokenmath_type_proof_AU",
     "UA_commonsense",
-    "UA_math"
+    "UA_math",
+    'grailqa'
 ]
 
 # Ordered strictly by model complexity (from 0-param heuristics to full 8-param TwoRest_ZI_PYP and Oracle)
@@ -1101,6 +1102,16 @@ def process_run(
         else:
             eff_pred, eff_correct = "DATA_UNCERTAIN", None
             
+        if isinstance(eff_pred, list):
+            eff_pred = str(eff_pred[0]).strip() if len(eff_pred) > 0 else ""
+        elif eff_pred is not None:
+            eff_pred = str(eff_pred).strip()
+        else:
+            eff_pred = ""
+
+        if isinstance(eff_correct, list):
+            eff_correct = bool(eff_correct[0]) if len(eff_correct) > 0 else False
+
         is_pred_unanswerable = eff_pred in UNANS_LABELS
         is_pred_answerable = (eff_pred == "ANSWERABLE")
 

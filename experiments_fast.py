@@ -15,7 +15,7 @@ MODELS = ["result_qwen3", "result_qwen36", "result_qwen38", 'result_gemini36', '
 # MODELS = ["result_qwen38"]
 OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 
-TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy', 'overall_f1', 'ans_f1'
+TARGET_METRIC = 'overall_accuracy'  # Options: 'overall_accuracy', 'balanced_accuracy', 'overall_f1', 'ans_f1'
 
 datasets = [
     'ReliableMath', 

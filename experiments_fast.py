@@ -18,12 +18,11 @@ OUTPUT_FILE = '/home/scai/phd/aiz248314/KBQA/scUn/UA-Bench/results.json'
 TARGET_METRIC = 'overall_f1'  # Options: 'overall_accuracy', 'balanced_accuracy', 'overall_f1', 'ans_f1'
 
 datasets = [
-    # 'ReliableMath', 
-    # "brokenmath_type_answer_AU",
-    # "brokenmath_type_proof_AU",
-    # "UA_commonsense",
-    # "UA_math",
-    'grailqa'
+    'ReliableMath', 
+    "brokenmath_type_answer_AU",
+    "brokenmath_type_proof_AU",
+    "UA_commonsense",
+    "UA_math",
 ]
 
 # Ordered strictly by model complexity (from 0-param heuristics to full 8-param TwoRest_ZI_PYP and Oracle)
@@ -978,6 +977,8 @@ def calculate_metrics(res):
     pred_pos_a = tp_a + fp_a
     ans_precision = (tp_a / pred_pos_a) if pred_pos_a > 0 else 0.0
     ans_f1 = 2 * (ans_precision * ans_accuracy) / (ans_precision + ans_accuracy) if (ans_precision + ans_accuracy) > 0 else 0.0
+    coverage = (pred_pos_a / (ans_count + unans_count)) if (ans_count + unans_count) > 0 else 0.0
+    selective_accuracy = ans_precision      # same quantity under your fp_a definition
 
     tp_u = matrix["ABSTAIN"]["Pred_Unanswerable"]
     fp_u = matrix["ANSWERABLE"]["Pred_Unanswerable"]
@@ -1001,7 +1002,9 @@ def calculate_metrics(res):
             "precision": round(ans_precision, 2),
             "accuracy": round(ans_accuracy, 2), 
             "ans_correct_in_samples": round(ans_sample_recall, 2),
-            "f1": round(ans_f1, 2)
+            "f1": round(ans_f1, 2),
+            "coverage": round(coverage, 2),
+            "selective_accuracy": round(selective_accuracy, 2),
         },
         "unanswerable": {
             "precision": round(unans_precision, 2),
@@ -1015,6 +1018,103 @@ def calculate_metrics(res):
     }
     return res
 
+def risk_coverage_curve(conf, can_answer, is_wrong, total_n, max_points=50):
+    """
+    conf       : confidence that the item should be ANSWERED (higher = answer first)
+    can_answer : bool, True if the method's top cluster is labelled ANSWERABLE
+                 (items the model itself abstains on are never answered)
+    is_wrong   : bool, True if answering would be an error
+                 (gt unanswerable, OR answerable but answer incorrect)
+    total_n    : total #items (coverage denominator, so it matches your 'coverage')
+    Returns AURC (mean risk over the reachable coverage range; lower is better),
+    max_coverage, and a downsampled [[coverage, risk], ...] curve.
+    """
+    conf = np.asarray(conf, dtype=float)
+    can = np.asarray(can_answer, dtype=bool)
+    wrong = np.asarray(is_wrong, dtype=bool)
+    idx = np.where(can)[0]
+    if len(idx) == 0 or total_n <= 0:
+        return {"aurc": None, "max_coverage": 0.0, "risk_coverage_curve": []}
+ 
+    order = idx[np.argsort(-conf[idx], kind="mergesort")]
+    c = conf[order]
+    cum_wrong = np.cumsum(wrong[order].astype(float))
+    k = np.arange(1, len(order) + 1, dtype=float)
+ 
+    # evaluate only at the END of each tie group (ties are answered together)
+    ends = np.where(np.append(c[1:] != c[:-1], True))[0]
+    cov = k[ends] / float(total_n)
+    risk = cum_wrong[ends] / k[ends]
+    prev_cov = np.concatenate([[0.0], cov[:-1]])
+    max_cov = float(cov[-1])
+    aurc = float(np.sum((cov - prev_cov) * risk) / max_cov)
+ 
+    if len(cov) > max_points:
+        keep = np.unique(np.linspace(0, len(cov) - 1, max_points).astype(int))
+        cov, risk = cov[keep], risk[keep]
+    return {
+        "aurc": round(aurc, 4),
+        "max_coverage": round(max_cov, 4),
+        "risk_coverage_curve": [[round(float(a), 4), round(float(b), 4)] for a, b in zip(cov, risk)],
+    }
+ 
+ 
+def _item_answer_confidence(item, method, threshold, ignore_idk, denom_mode):
+    """Returns (confidence, can_answer, is_wrong) or None if the method has no confidence score."""
+    if method in GENERATIVE_METHODS:
+        ignore_idk = threshold.get('test_ignore_idk', True)
+ 
+    N, n_0, m, clusters, is_corr, pred_lbl = extract_clusters(item, ignore_idk=ignore_idk)
+    if N == 0 or not clusters:
+        return (-1e9, False, False)
+ 
+    best = max(clusters, key=len)
+    best_i = best[0]
+    denom = m if denom_mode == 'm' else N
+ 
+    if method in ('majority', 'most_freq', 'adapted_sc'):
+        if denom <= 0:
+            return (-1e9, False, False)
+        conf = len(best) / float(denom)
+    elif method == 'crp_k':
+        if denom <= 0:
+            return (-1e9, False, False)
+        K = len(clusters)
+        conf = -(K * float(N) / denom if denom_mode == 'm' else float(K))
+    elif method == 'crp_theta':
+        if denom <= 0:
+            return (-1e9, False, False)
+        conf = -get_mle_theta(denom, len(clusters))
+    elif method == 'Adaptive_Consistency_beta':
+        if "_fast_cache" not in item:
+            return None
+        seq = item["_fast_cache"][bool(ignore_idk)]['seq']
+        last = next((s for s in reversed(seq) if s is not None), None)
+        if last is None:
+            return (-1e9, False, False)
+        conf = last[1] if denom_mode == 'm' else last[0]
+    elif method in GENERATIVE_METHODS:
+        conf = -compute_generative_score(item, threshold)
+    else:
+        return None  # greedy / oracle: no confidence score
+ 
+    can_answer = (pred_lbl[best_i] == "ANSWERABLE")
+    gt_unans = (item.get("should_abstain") is True)
+    is_wrong = gt_unans or (not bool(is_corr[best_i]))
+    return (conf, can_answer, is_wrong)
+ 
+ 
+def compute_aurc_metrics(data, method, threshold, ignore_idk, denom_mode):
+    rows = []
+    for item in data:
+        r = _item_answer_confidence(item, method, threshold, ignore_idk, denom_mode)
+        if r is None:
+            return {"aurc": None, "max_coverage": None, "risk_coverage_curve": []}
+        rows.append(r)
+    if not rows:
+        return {"aurc": None, "max_coverage": None, "risk_coverage_curve": []}
+    conf, can, wrong = zip(*rows)
+    return risk_coverage_curve(conf, can, wrong, total_n=len(rows))
 
 def process_run(
     data,
@@ -1155,7 +1255,12 @@ def process_run(
     analysis["TN_successful_abstention"]["avg_total_clusters"] = round(analysis["TN_successful_abstention"]["sum_total_clusters"] / tn_c, 2) if tn_c > 0 else 0.0
     del analysis["TN_successful_abstention"]["sum_total_clusters"]
 
-    return calculate_metrics(res)
+    res = calculate_metrics(res)
+    res["metrics"].update(
+        compute_aurc_metrics(data, method, threshold, ignore_abstention_tokens, denom_mode)
+    )
+    return res
+    # return calculate_metrics(res)
 
 
 # ==========================================

@@ -973,6 +973,7 @@ def calculate_metrics(res):
     ans_correct_in_samples = res.get('ans_correct_in_samples', 0)
     ans_sample_recall = (ans_correct_in_samples / ans_count) if ans_count > 0 else 0.0
     ans_accuracy = (tp_a / ans_count) if ans_count > 0 else 0.0
+    unans_count = res['unans_count']
     
     pred_pos_a = tp_a + fp_a
     ans_precision = (tp_a / pred_pos_a) if pred_pos_a > 0 else 0.0

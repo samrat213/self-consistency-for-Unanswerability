@@ -290,7 +290,7 @@ unanswerable questions.
 **What was tried and dropped:** an option-aware urn and a 2-component mixture (`run_reserved_tables.py`). Both were
 dropped on dev 5-fold CV.
 
-**Dashboard rows:** `Reserved_Tables` under result_qwen38 for VQA (both settings) and ReliableMath / BrokenMath-answer;
+**Dashboard rows (removed 2026-11-16 at the user's request; `export_rt_dashboard.py` re-creates them):** `Reserved_Tables` under result_qwen38 for VQA (both settings) and ReliableMath / BrokenMath-answer;
 `Reserved_Tables (empty = abstain)` for GrailQA / GraphQA.
 - **KBQA convention:** in the KBQA rows, an empty result counts as an abstention, unlike the other KBQA rows.
 - **Partner files:** they belong to result_qwen38 — their greedy and self-consistency counts match the dashboard.

@@ -214,17 +214,17 @@ flip easily. Left four columns: aware; right four: unaware.
 with their keep/drop-IDK × N/m ablations, 38 rows per dataset and setting, AURC included. It writes the rows to
 `dashboard/results.json` under `result_qwen38/VQA_*`.
 - **Greedy** uses the real temperature-0 answers (`data/<ds>_<setting>_greedy.json`).
-- **Tuning:** VQA rows are tuned on dev with the same metric as the partner's rows: `TARGET_METRIC =
-  'overall_accuracy'`, the experiments_fast default since 6f83ad2. Our 10 rule rows (Greedy … Unans_votes +
-  CRP_k, from `~/vqa-datasets/rules.py --objective overall_accuracy`) were re-tuned the same way.
-  `--metric overall_f1` gives the old F1-tuned variant.
+- **Tuning:** all VQA rows are tuned on dev with **Overall F1** (user decision, 2026-11-16). This covers the 38
+  experiments_fast rows and our 10 rule rows (Greedy … Unans_votes + CRP_k, from `~/vqa-datasets/rules.py`).
+  `run_fast_vqa.py` overrides experiments_fast's own default (`TARGET_METRIC = 'overall_accuracy'` since 6f83ad2);
+  `--metric overall_accuracy --out <file>` gives the accuracy-tuned variant.
 
 Best test Overall F1, aware setting:
 
 | dataset | score | method |
 |---|---|---|
 | UVQA | 0.81 | TwoRest_Binomial_Hurdle_CRP |
-| UNK-VQA | 0.42 | self Consistency |
+| UNK-VQA | 0.43 | CRP_k |
 | SpatialUncertain | 0.59 | scUn + T |
 | HaloQuest | 0.75 | Greedy (most methods 0.72–0.75) |
 
@@ -260,11 +260,10 @@ confusion counts. Problems found:
 All three fixes are in `experiments_fast.py`, `experiments_fast_KBQA.py` and `experiments_CRP.py`. The FP guard is
 also in `eval_threshold.py`.
 
-**Effect on the VQA rows** (accuracy-tuned):
-- 53 of 304 rows change.
-- Never-answer or always-answer collapses (F1 ≈ 0.33) drop from 38 rows to 18. Most of the recovery comes from
-  the tau fix, e.g. SpatialUncertain aware TwoRest_CRP 0.33 → 0.57 and HaloQuest unaware TwoRest_Hurdle_CRP
-  0.70 → 0.74.
+**Effect of the fixes on the VQA rows (F1-tuned):**
+- 50 of 304 rows change.
+- No VQA row collapses to never answering any more (18 did with the unfixed code).
+- Under accuracy tuning, the collapses (F1 ≈ 0.33) drop from 38 rows to 18, mostly thanks to the tau fix.
 - The PYP bound alone moves the fitted α below 0 (e.g. α_U = −0.63, d_U = 0.68 on HaloQuest). Without the tau
   fix it made some rows worse, so both fixes need to go together.
 

@@ -2,8 +2,8 @@
 vqa/data/, unchanged, and write the rows to dashboard/results.json under
 result_qwen38/VQA_<DS>/{"_abstaintion", ""}. Existing VQA rows with other names (our earlier rule rows) are kept.
 
-  python vqa/run_fast_vqa.py                      # tunes with experiments_fast.TARGET_METRIC, writes the dashboard
-  python vqa/run_fast_vqa.py --metric overall_f1 --out vqa/results_fast_overall_f1.json   # side file only
+  python vqa/run_fast_vqa.py                      # tunes VQA rows on Overall F1, writes the dashboard
+  python vqa/run_fast_vqa.py --metric overall_accuracy --out vqa/x.json   # other metric, side file only
 
 The dev/test split is the fixed one stored in each data file (split by item id, since VQA question texts repeat).
 """
@@ -44,7 +44,7 @@ def run(metric):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--metric", default=None, help="override experiments_fast.TARGET_METRIC")
+    ap.add_argument("--metric", default="overall_f1", help="dev tuning metric for the VQA rows (overrides experiments_fast.TARGET_METRIC)")
     ap.add_argument("--out", default=None, help="write here instead of merging into the dashboard")
     a = ap.parse_args()
     print("TARGET_METRIC =", a.metric or E.TARGET_METRIC)

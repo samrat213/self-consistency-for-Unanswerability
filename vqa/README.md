@@ -327,3 +327,7 @@ KBQA rows (empty = abstain) use the same conventions as LogReg_Features.
 
 Dev comparison (`tuning_target_comparison.py`): judged by balanced accuracy, answerability-F1 tuning is 1.1 points
 lower on average than Overall-F1 tuning; judged by answerability accuracy the two tie.
+
+**2026-11-16: VQA_UVQA and VQA_UNKVQA removed from the dashboard** at the user's request. Their votes stay in
+`vqa/data/`, and the export scripts can re-create the rows. The dashboard now shows VQA_SpatialUncertain and
+VQA_HaloQuest.

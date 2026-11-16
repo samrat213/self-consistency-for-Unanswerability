@@ -269,3 +269,34 @@ also in `eval_threshold.py`.
 
 **The partner's math/KBQA rows still come from the unfixed code.** Their data isn't in this repo, so a rerun on
 his side is needed to update them.
+
+## E10 (2026-11-16): Reserved_Tables, a generative model built from a dev audit of the vote distributions
+
+Code: `vqa/reserved_tables/`. Paths in it point to the local VQA data and the partner's raw sample files and splits
+(`~/uploads/partner_1116`), so they need adjusting on another machine.
+
+**Audit (`final_audit.py`, dev only).** Across 7 datasets, unanswerable questions either pile onto IDK or agree on one
+wrong answer. Split votes, measured relative to the answer format, stay at or below 8% in the aware setting. In KBQA,
+empty query results are a third outcome: per FUn (JAIR_FUn_V6, Sec. 3) they are the correct output for data-level
+unanswerable questions.
+
+**Model.**
+- **IDK count:** a Beta-Binomial on n0, the number of IDK samples. KBQA uses a Dirichlet-Multinomial over NK, empty
+  and real answers instead.
+- **Real answers:** a CRP over how the real answers cluster.
+- **Fitting:** one component per class, fitted by maximum likelihood on dev; tau tuned on dev for Overall F1.
+- **Decision:** abstain if log p(x|U) − log p(x|A) > tau. Otherwise answer the largest real cluster.
+
+**What was tried and dropped:** an option-aware urn and a 2-component mixture (`run_reserved_tables.py`). Both were
+dropped on dev 5-fold CV.
+
+**Dashboard rows:** `Reserved_Tables` under result_qwen38 for VQA (both settings) and ReliableMath / BrokenMath-answer;
+`Reserved_Tables (empty = abstain)` for GrailQA / GraphQA.
+- **KBQA convention:** in the KBQA rows, an empty result counts as an abstention, unlike the other KBQA rows.
+- **Partner files:** they belong to result_qwen38 — their greedy and self-consistency counts match the dashboard.
+- **Test split:** a question text that appears in both the val and test files is counted as val, as in
+  `split_output_data`.
+
+Test Overall F1: UVQA 80 / 52 (aware / unaware), SpatialUncertain 59 / 48, HaloQuest 72 / 73, UNK-VQA 40 / 34,
+ReliableMath 65, BrokenMath-answer 73, GrailQA 73, GraphQA 62. It ties logistic regression on (n0/N, e/N,
+concentration, K) within about 1 point, and beats greedy by 7–25 points on 6 of 12 settings.

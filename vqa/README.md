@@ -300,3 +300,11 @@ dropped on dev 5-fold CV.
 Test Overall F1: UVQA 80 / 52 (aware / unaware), SpatialUncertain 59 / 48, HaloQuest 72 / 73, UNK-VQA 40 / 34,
 ReliableMath 65, BrokenMath-answer 73, GrailQA 73, GraphQA 62. It ties logistic regression on (n0/N, e/N,
 concentration, K) within about 1 point, and beats greedy by 7–25 points on 6 of 12 settings.
+
+**LogReg_Features rows (2026-11-16).** A logistic regression on the same per-question summary that Reserved_Tables uses:
+IDK share n0/N, empty share e/N (KBQA), the largest real cluster's concentration normalised by the number of answer
+options, and K/N.
+- **Fitting:** fitted on dev, tau tuned on dev for Overall F1; same splits, decision rule and KBQA convention as
+  Reserved_Tables (`export_logreg_dashboard.py`).
+- **Role:** it was the discriminative counterpart used to test whether the generative structure adds anything. On test
+  the two are within about 1 point everywhere.

@@ -308,3 +308,22 @@ options, and K/N.
   Reserved_Tables (`export_logreg_dashboard.py`).
 - **Role:** it was the discriminative counterpart used to test whether the generative structure adds anything. On test
   the two are within about 1 point everywhere.
+
+## E11 (2026-11-16): answerability F1, balanced accuracy, "Tuned on"
+
+**Dashboard columns**, computed in the browser from each row's confusion counts, so every row has them:
+- **Answerability F1:** macro-F1 of the answer / abstain decision. A wrong answer to an answerable question counts as a
+  correct "answer" decision.
+- **Balanced Acc:** (answerable accuracy + unanswerable accuracy) / 2, with wrong answers counted as errors.
+- **Tuned on:** the dev metric each row's threshold was tuned on, from the new `tuned_on` field (`tag_tuned_on.py`).
+  The partner's math rows are Overall accuracy and his KBQA rows Overall F1. This was verified by re-running his
+  `learn_best_threshold` on his result_qwen38 dev data: 6/6 stored thresholds reproduce on each dataset. Other models
+  are assumed to come from the same scripts. Our VQA and LogReg rows are Overall F1; rules without a tuned threshold
+  are "none (fixed rule)".
+
+**New rows:** `<method> [tuned: answerability F1]` for Hurdle_CRP, CRP_k, scUn + T and LogReg_Features, on the 4 VQA
+datasets (both settings) and ReliableMath, BrokenMath-answer, GrailQA and GraphQA (`export_ansf1_dashboard.py`). The
+KBQA rows (empty = abstain) use the same conventions as LogReg_Features.
+
+Dev comparison (`tuning_target_comparison.py`): judged by balanced accuracy, answerability-F1 tuning is 1.1 points
+lower on average than Overall-F1 tuning; judged by answerability accuracy the two tie.

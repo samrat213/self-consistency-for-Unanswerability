@@ -226,6 +226,24 @@
                                             Awareness: mode_str,
                                             Method: method.replace(/^_/, '').replace('__V_keepIDK__T_keepIDK', ''),
                                             Overall_Acc: metrics.overall_accuracy,
+                                            ...(() => {
+                                                // computed from the stored confusion counts, so every row gets them
+                                                const mx = details.matrix_gt_pred_counts || {};
+                                                const A = mx.ANSWERABLE || {}, U = mx.ABSTAIN || {};
+                                                const ac = A.Pred_ANSWERABLE_correct || 0, aw = A.Pred_ANSWERABLE_wrong || 0, au = A.Pred_Unanswerable || 0;
+                                                const ua = U.Pred_ANSWERABLE || 0, uu = U.Pred_Unanswerable || 0;
+                                                if (ac + aw + au + ua + uu === 0) return { Answerability_f1: null, Balanced_Acc: null };
+                                                const f1 = (p, r) => (p + r > 0 ? 2 * p * r / (p + r) : 0);
+                                                const div = (a, b) => (b > 0 ? a / b : 0);
+                                                // answerability F1: a wrong answer to an answerable question is a correct "answer" decision
+                                                const tpA = ac + aw;
+                                                const ansF1 = f1(div(tpA, tpA + ua), div(tpA, tpA + au));
+                                                const unansF1 = f1(div(uu, uu + au), div(uu, ua + uu));
+                                                // balanced accuracy: mean of answerable accuracy (correct answers) and unanswerable accuracy
+                                                const balAcc = (div(ac, ac + aw + au) + div(uu, ua + uu)) / 2;
+                                                return { Answerability_f1: (ansF1 + unansF1) / 2, Balanced_Acc: balAcc };
+                                            })(),
+                                            TunedOn: details.tuned_on,
                                             Overall_f1: metrics.overall_f1,
                                             Ans_accuracy: ans.accuracy,
                                             Unans_accuracy: unans.accuracy,
@@ -404,8 +422,14 @@
                                         <th className="px-4 py-3 text-right cursor-pointer hover:bg-gray-700 transition text-purple-200" onClick={() => requestSort('unans_f1')}>
                                             Unans F1 <span className="text-gray-400 text-[10px]">{getSortIndicator('unans_f1')}</span>
                                         </th>
+                                        <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Answerability_f1')}>
+                                            Answerability F1 <span className="text-gray-300 text-[10px]">{getSortIndicator('Answerability_f1')}</span>
+                                        </th>
                                         <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Overall_Acc')}>
                                             Overall Acc <span className="text-gray-300 text-[10px]">{getSortIndicator('Overall_Acc')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 text-right bg-blue-900 border-l border-gray-700 cursor-pointer hover:bg-blue-800 transition" onClick={() => requestSort('Balanced_Acc')}>
+                                            Balanced Acc <span className="text-gray-300 text-[10px]">{getSortIndicator('Balanced_Acc')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Ans_accuracy')}>
                                             Ans Acc <span className="text-gray-400 text-[10px]">{getSortIndicator('Ans_accuracy')}</span>
@@ -430,6 +454,9 @@
                                         </th>
                                         <th className="px-4 py-3 text-right border-l border-gray-700 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('Threshold')}>
                                             Threshold <span className="text-gray-400 text-[10px]">{getSortIndicator('Threshold')}</span>
+                                        </th>
+                                        <th className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition" onClick={() => requestSort('TunedOn')}>
+                                            Tuned on <span className="text-gray-400 text-[10px]">{getSortIndicator('TunedOn')}</span>
                                         </th>
                                         <th className="px-4 py-3 text-center border-l border-gray-700">Histogram</th>
                                         <th className="px-4 py-3 text-center">JSON</th>
@@ -457,7 +484,9 @@
                                                 <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_f1)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-purple-800 font-mono">{formatDecimal(row.ans_f1)}</td>
                                                 <td className="px-4 py-3 text-right text-purple-800 font-mono">{formatDecimal(row.unans_f1)}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Answerability_f1)}</td>
                                                 <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Overall_Acc)}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-gray-900 bg-blue-50 border-l border-blue-100">{formatDecimal(row.Balanced_Acc)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-700">{formatDecimal(row.Ans_accuracy)}</td>
                                                 <td className="px-4 py-3 text-right text-gray-700">{formatDecimal(row.Unans_accuracy)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-emerald-700 font-mono">{formatInt(row.ans_correct_in_samples)}</td>
@@ -466,6 +495,7 @@
                                                 <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FN_most_freq)}</td>
                                                 <td className="px-4 py-3 text-right text-red-700 font-mono">{formatInt(row.FP_correct_present)}</td>
                                                 <td className="px-4 py-3 text-right border-l border-gray-200 text-gray-500 font-mono">{row.ThresholdLabel ?? formatDecimal(row.Threshold)}</td>
+                                                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.TunedOn ?? '-'}</td>
                                                 
                                                 <td className="px-4 py-3 text-center border-l border-gray-200">
                                                     {hasHistogram ? (
@@ -485,7 +515,7 @@
                                             </tr>
                                         );
                                     })}
-                                    {sortedData.length === 0 && <tr><td colSpan="20" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
+                                    {sortedData.length === 0 && <tr><td colSpan="23" className="px-4 py-8 text-center text-gray-500 font-medium">No data matches the selected filters.</td></tr>}
                                 </tbody>
                             </table>
                         </div>

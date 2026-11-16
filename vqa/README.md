@@ -331,3 +331,6 @@ lower on average than Overall-F1 tuning; judged by answerability accuracy the tw
 **2026-11-16: VQA_UVQA and VQA_UNKVQA removed from the dashboard** at the user's request. Their votes stay in
 `vqa/data/`, and the export scripts can re-create the rows. The dashboard now shows VQA_SpatialUncertain and
 VQA_HaloQuest.
+
+**2026-11-16: the `[tuned: answerability F1]` rows were removed from the dashboard** at the user's request.
+`export_ansf1_dashboard.py` re-creates them. The Answerability F1, Balanced Acc and Tuned on columns stay.

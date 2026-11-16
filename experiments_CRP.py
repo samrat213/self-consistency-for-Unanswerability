@@ -459,7 +459,7 @@ def fit_pyp_mle(m_list, K_list, sizes_list):
     res = scipy.optimize.minimize(
         neg_ll,
         x0=[1.0, 0.15],
-        bounds=[(1e-4, 500.0), (1e-4, 0.999)],
+        bounds=[(-0.999, 500.0), (1e-4, 0.999)],  # alpha > -d is enforced inside neg_ll
         method='L-BFGS-B'
     )
     return float(res.x[0]), float(res.x[1])
@@ -778,7 +778,7 @@ def train_generative_restaurant_model(
             best_score = score
             best_tau = float(tau)
 
-    params['tau'] = round(best_tau, 4)
+    params['tau'] = float(best_tau)  # unrounded: tau often sits exactly on a tied score, rounding flips that whole block
     return params
 
 
@@ -961,7 +961,8 @@ def process_run(
             if is_pred_answerable:
                 res["matrix_gt_pred_counts"][gt]['Pred_ANSWERABLE'] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["count"] += 1
-                res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
+                if correct_present:
+                    res["error_analysis"]["FP_hallucinated_unanswerable"]["correct_present_count"] += 1
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_winning_freq"] += max_freq
                 res["error_analysis"]["FP_hallucinated_unanswerable"]["sum_total_clusters"] += total_clusters
             elif is_pred_unanswerable:

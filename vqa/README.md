@@ -208,44 +208,65 @@ flip easily. Left four columns: aware; right four: unaware.
 4. **Report "F1 vs average samples" curves** (plus AURC) as a main result, with Adaptive Consistency /
    Early-Stopping SC as baselines.
 
-## E9 (2026-11-16): `experiments_fast.py` on VQA, and checks of the new pipeline
+## E9 (2026-11-16): `experiments_fast.py` on VQA, checks, and fixes
 
-`python vqa/run_fast_vqa.py --metric overall_f1` runs the partner's `experiments_fast.py` **unchanged** (all 22
-methods with their keep/drop-IDK × N/m ablations, 38 rows per dataset and setting, AURC included) on the four VQA
-datasets. It writes the rows to `dashboard/results.json` under `result_qwen38/VQA_*`. Greedy now uses the real
-temperature-0 answers (`data/<ds>_<setting>_greedy.json`). VQA rows are tuned on dev with **Overall F1**, like
-every earlier VQA row. `experiments_fast.py` itself now ships with `TARGET_METRIC = 'overall_accuracy'` (changed
-in 6f83ad2). `--metric overall_accuracy --out …` gives that variant: 41 of 304 VQA rows change, and the
-never-answer rows go from 18 to 38.
+`python vqa/run_fast_vqa.py` runs the partner's `experiments_fast.py` on the four VQA datasets: all 22 methods
+with their keep/drop-IDK × N/m ablations, 38 rows per dataset and setting, AURC included. It writes the rows to
+`dashboard/results.json` under `result_qwen38/VQA_*`.
+- **Greedy** uses the real temperature-0 answers (`data/<ds>_<setting>_greedy.json`).
+- **Tuning:** VQA rows are tuned on dev with the same metric as the partner's rows: `TARGET_METRIC =
+  'overall_accuracy'`, the experiments_fast default since 6f83ad2. Our 10 rule rows (Greedy … Unans_votes +
+  CRP_k, from `~/vqa-datasets/rules.py --objective overall_accuracy`) were re-tuned the same way.
+  `--metric overall_f1` gives the old F1-tuned variant.
 
-Best non-oracle test Overall F1 (aware): UVQA 0.81 (TwoRest_Binomial_Hurdle_CRP), UNK-VQA 0.43 (CRP_k keepIDK),
-SpatialUncertain 0.59 (self_Consistency_T keepIDK), HaloQuest 0.75 (Greedy; most methods tie at 0.74–0.75).
+Best test Overall F1, aware setting:
 
-**Cross-check against our independent VQA code (`~/vqa-datasets/rules.py`).** The confusion counts were compared
-for the 7 shared methods × 8 dataset/settings:
+| dataset | score | method |
+|---|---|---|
+| UVQA | 0.81 | TwoRest_Binomial_Hurdle_CRP |
+| UNK-VQA | 0.42 | self Consistency |
+| SpatialUncertain | 0.59 | scUn + T |
+| HaloQuest | 0.75 | Greedy (most methods 0.72–0.75) |
+
+**Cross-check against our independent VQA code (`~/vqa-datasets/rules.py`).** I compared the confusion counts
+of 7 shared methods in all 8 dataset/settings:
 - Greedy matches exactly in all 8.
-- Most of the other cells match exactly or differ by 1–6 questions. Three rule differences explain this, and none
-  of them is a bug:
-  - **Ties:** a tie goes to the first-seen cluster in experiments_fast, but to the greedy answer in our code.
+- The other cells match or differ by 1–6 questions. Three rule differences explain this, and none is a bug:
+  - **Ties:** a tie goes to the first-seen cluster, not to the greedy answer.
   - **Majority:** experiments_fast uses `share ≥ 0.5`; ours uses `> 0.5`.
-  - **Adaptive Consistency + T:** experiments_fast stops at the first k with P ≥ τ on a 0.05–0.95 grid, so a single
-    sample (P = 0.75) already stops it at low τ. This makes large differences on unaware data.
-- TwoRest_Hurdle/Reserved/ZI_PYP mostly reproduce our experiments_CRP rows (c2df261) to ±0.01. The exceptions are
-  rows where one of the two runs collapses to always-answer or never-answer, and ZI_PYP on UNK-VQA: 0.41 → 0.36,
-  because the PYP α bound went back to α ≥ 1e-4.
+  - **Adaptive Consistency + T:** it stops at the first k with P ≥ τ on a 0.05–0.95 grid, so a single sample
+    (P = 0.75) already stops it.
 
-**Checks on the partner's `results.json` (all 1603 math/KBQA rows):**
-- **Metrics:** every metric recomputes exactly from the confusion counts.
-- **FP correct-present column (bug):** `correct_present_count` for FP equals `count` in all 1436 rows with FPs.
-  Line 1236 increments it without the `if correct_present` guard. The guard was fixed in be01ebb and then lost in
-  the rewrite, so the "FP Correct Present" column on the dashboard is just the FP count.
-- **PYP α lower bound:** `fit_pyp_mle` is back at `alpha ≥ 1e-4`. The PYP needs `alpha > −d`, which was fixed in
-  be01ebb and lost in the rewrite.
-- **Dropped predictions:** predictions whose label is neither ANSWERABLE nor one of `UNANS_LABELS` are counted
-  neither as answered nor as abstained, but stay in the denominators. 48 rows are affected, mostly Greedy; the
-  worst is gemini38 brokenmath_proof aware Greedy, with 95 dropped.
-- **Duplicate rows:** `04_self_Consistency_T__{2,3}` and `05_scUn__{2,3}` are the same rule (84/84 rows identical).
-- **Ties pick the most abstaining threshold:** the tau search rounds the score to 2 decimals and keeps the first
-  maximum, i.e. the lowest tau.
-- **Never-answer rows:** 153 rows (all generative models, mostly ReliableMath, which is 78% unanswerable) never
-  answer on test. The previous Overall-F1 run (1972f13) had 91.
+**Checks on the partner's `results.json` (1603 math/KBQA rows).** Every metric recomputes exactly from the
+confusion counts. Problems found:
+- **FP "correct present" bug:** `FP_hallucinated_unanswerable.correct_present_count` equals the FP count in all
+  1436 rows with FPs. **Fixed.**
+- **Pitman-Yor α bound:** `fit_pyp_mle` used α ≥ 1e-4, but the process (and `neg_ll`) allow α > −d.
+  **Fixed: bound −0.999.**
+  - This bug and the FP bug were both fixed in be01ebb and lost again in the rewrite.
+- **`tau` rounding (new bug):** `train_generative_restaurant_model` stored `tau = round(best_tau, 4)`. The tau
+  candidates are percentiles of the dev scores, so tau often equals a score shared by a tied block of questions.
+  Rounding it down moves the whole block from "answer" to "abstain". Example: HaloQuest aware
+  TwoRest_Binomial_ZI_PYP, dev accuracy 0.76 at the chosen tau, 0.54 after rounding. **Fixed: tau stored
+  unrounded.**
+- **Silently skipped predictions (not changed):** predictions whose label is neither ANSWERABLE nor one of
+  `UNANS_LABELS` are counted neither as answered nor as abstained, but stay in the denominators. This affects 48
+  rows, mostly Greedy; the worst is gemini38 brokenmath_proof aware Greedy, with 95 skipped.
+- **Duplicate rows (not changed):** `04_self_Consistency_T__{2,3}` and `05_scUn__{2,3}` are the same rule
+  (84/84 identical).
+- **Ties pick the most abstaining threshold (not changed):** the tau search rounds the score to 2 decimals and
+  keeps the first maximum, i.e. the lowest tau.
+
+All three fixes are in `experiments_fast.py`, `experiments_fast_KBQA.py` and `experiments_CRP.py`. The FP guard is
+also in `eval_threshold.py`.
+
+**Effect on the VQA rows** (accuracy-tuned):
+- 53 of 304 rows change.
+- Never-answer or always-answer collapses (F1 ≈ 0.33) drop from 38 rows to 18. Most of the recovery comes from
+  the tau fix, e.g. SpatialUncertain aware TwoRest_CRP 0.33 → 0.57 and HaloQuest unaware TwoRest_Hurdle_CRP
+  0.70 → 0.74.
+- The PYP bound alone moves the fitted α below 0 (e.g. α_U = −0.63, d_U = 0.68 on HaloQuest). Without the tau
+  fix it made some rows worse, so both fixes need to go together.
+
+**The partner's math/KBQA rows still come from the unfixed code.** Their data isn't in this repo, so a rerun on
+his side is needed to update them.
